@@ -27,6 +27,8 @@ import {
   BookOpen,
   Briefcase,
 } from "lucide-react";
+import { Branch, getBranches } from "@/lib/branches";
+import { useEffect, useState } from "react";
 
 const leadFormSchema = z.object({
   counsellingDate: z.string().optional(),
@@ -67,7 +69,7 @@ const leadFormSchema = z.object({
   gapsIfAny: z.string().optional(),
   status: z.string().optional(),
   source: z.string().optional(),
-  branch: z.string().min(1, "Branch is required"),
+  branchId: z.string().min(1, "Branch is required"),
 });
 
 type LeadFormValues = z.infer<typeof leadFormSchema>;
@@ -105,7 +107,7 @@ const branchOptions = [
 ];
 export default function AddLeadPage() {
   const router = useRouter();
-
+  const [branches, setBranches] = useState<Branch[]>([]);
   const {
     register,
     control,
@@ -122,11 +124,24 @@ export default function AddLeadPage() {
       place: "",
       passport: "",
       source: "",
-      branch: "",
+      branchId: "",
       status: "draft",
     },
   });
+  useEffect(() => {
+    const loadBranches = async () => {
+      try {
+        const data = await getBranches();
 
+        setBranches(data);
+      } catch (error) {
+        console.error(error);
+        toast.error("Failed to load branches");
+      }
+    };
+
+    loadBranches();
+  }, []);
   const onSubmit = async (values: LeadFormValues, continueFlow = false) => {
     try {
       const response = await fetch("http://localhost:4000/leads", {
@@ -301,10 +316,10 @@ export default function AddLeadPage() {
 
                   <Controller
                     control={control}
-                    name="branch"
+                    name="branchId"
                     render={({ field }) => (
                       <Select
-                        value={field.value ?? ""}
+                        value={field.value}
                         onValueChange={field.onChange}
                       >
                         <SelectTrigger>
@@ -312,9 +327,9 @@ export default function AddLeadPage() {
                         </SelectTrigger>
 
                         <SelectContent>
-                          {branchOptions.map((item) => (
-                            <SelectItem key={item} value={item}>
-                              {item}
+                          {branches.map((branch) => (
+                            <SelectItem key={branch.id} value={branch.id}>
+                              {branch.name}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -322,9 +337,9 @@ export default function AddLeadPage() {
                     )}
                   />
 
-                  {errors.branch && (
+                  {errors.branchId && (
                     <p className="text-sm font-medium text-destructive">
-                      {errors.branch.message}
+                      {errors.branchId.message}
                     </p>
                   )}
                 </div>
