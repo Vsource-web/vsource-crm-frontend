@@ -1,5 +1,17 @@
-export type LeadStatus = "new" | "contacted" | "qualified" | "converted" | "lost" | "draft";
-export type ApplicationStage = "inquiry" | "documents" | "applied" | "offer" | "visa" | "enrolled";
+export type LeadStatus =
+  | "new"
+  | "contacted"
+  | "qualified"
+  | "converted"
+  | "lost"
+  | "draft";
+export type ApplicationStage =
+  | "inquiry"
+  | "documents"
+  | "applied"
+  | "offer"
+  | "visa"
+  | "enrolled";
 
 export interface Lead {
   id: string;
@@ -91,11 +103,11 @@ export interface Application {
 export interface Branch {
   id: string;
   name: string;
-  city: string;
-  manager: string;
-  staff: number;
-  students: number;
-  revenue: number;
+  isActive: boolean;
+  usersCount: number;
+  leadsCount: number;
+  studentsCount: number;
+  createdAt: string;
 }
 
 export interface Counselor {
@@ -128,6 +140,29 @@ export interface LoanInquiry {
   appliedAt: string;
 }
 
-export interface Role { id: string; name: string; users: number; permissions: Record<string, { c: boolean; r: boolean; u: boolean; d: boolean }>; }
-export interface UserRow { id: string; name: string; email: string; role: string; branch: string; status: "active" | "inactive"; lastLogin: string; }
-export interface NotificationItem { id: string; title: string; description: string; time: string; read: boolean; type: "lead" | "application" | "system"; }
+export interface Role {
+  id: string;
+  name: string;
+  users: number;
+  permissions: Record<
+    string,
+    { c: boolean; r: boolean; u: boolean; d: boolean }
+  >;
+}
+export interface UserRow {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  branch: string;
+  status: "active" | "inactive";
+  lastLogin: string;
+}
+export interface NotificationItem {
+  id: string;
+  title: string;
+  description: string;
+  time: string;
+  read: boolean;
+  type: "lead" | "application" | "system";
+}
