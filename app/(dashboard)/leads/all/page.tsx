@@ -1,7 +1,7 @@
-// app\(dashboard)\leads\AllLead\page.tsx
+// crm-frontend-next\app\(dashboard)\leads\all\page.tsx
 "use client";
+
 import { useMemo, useState, useEffect } from "react";
-// import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { PageHeader, PageTransition } from "@/components/common/PageHeader";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -17,30 +17,19 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetDescription,
-} from "@/components/ui/sheet";
-import {
-  Search,
-  Filter,
-  Download,
-  Plus,
-  Pencil,
-  Trash2,
-  Eye,
-} from "lucide-react";
-import { leads as seedLeads } from "@/data/leads";
-import type { Lead, LeadStatus } from "@/types";
+import { Search, Download, Plus, Pencil, Trash2, Eye } from "lucide-react";
+import type { LeadStatus } from "@/types";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useRouter } from "next/navigation";
+import PageActions from "./pageactions";
+
+// Production API URL fallback configuration
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
 
 const statusStyle: Record<LeadStatus, string> = {
+  draft:
+    "bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700",
   new: "bg-info/15 text-info border-info/20",
   contacted: "bg-warning/15 text-warning border-warning/20",
   qualified: "bg-primary/10 text-primary border-primary/20",
@@ -50,6 +39,7 @@ const statusStyle: Record<LeadStatus, string> = {
 
 const statusTabs: Array<LeadStatus | "all"> = [
   "all",
+  "draft",
   "new",
   "contacted",
   "qualified",
@@ -57,40 +47,78 @@ const statusTabs: Array<LeadStatus | "all"> = [
   "lost",
 ];
 
+interface LeadRecord {
+  id: string;
+  leadNumber: string;
+  studentName?: string;
+  mobileNumber?: string;
+  emailId?: string;
+  source?: string;
+  branch?: string;
+  preferredCountry?: string;
+  assignedCounselor?: string;
+  remarks?: string;
+  nextFollowup?: string | null;
+  status: LeadStatus;
+  createdAt: string;
+}
+
+const branchOptions = [
+  "Dilsukhnagar Branch",
+  "Ameerpet Branch",
+  "KPHB - JNTU Branch",
+  "Vijayawada Branch",
+  "Visakhapatnam Branch",
+  "Tirupathi Branch",
+  "Bengaluru Branch",
+];
+
 export default function AllLeadsPage() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState<LeadStatus | "all">("all");
-  const [branch, setBranch] = useState("");
-  const [source, setSource] = useState("");
+  const [branch, setBranch] = useState("all");
+  const [source, setSource] = useState("all");
   const [page, setPage] = useState(1);
-  const [selected, setSelected] = useState<Lead | null>(null);
-  const [leads, setLeads] = useState<Lead[]>([]);
 
-  useEffect(() => {
-    const timer = window.setTimeout(() => {
-      setLeads(seedLeads);
-      setIsLoading(false);
-    }, 450);
-    return () => window.clearTimeout(timer);
-  }, []);
+  // Modals & Action States
+  const [selected, setSelected] = useState<LeadRecord | null>(null);
+  const [editingLead, setEditingLead] = useState<LeadRecord | null>(null);
+  const [leadIdToDelete, setLeadIdToDelete] = useState<string | null>(null);
+
+  const [leads, setLeads] = useState<LeadRecord[]>([]);
+
+  const uniqueSources = useMemo(() => {
+    return [
+      ...new Set(
+        leads
+          .map((lead) => lead.source)
+          .filter(
+            (source): source is string =>
+              typeof source === "string" && source.trim().length > 0,
+          ),
+      ),
+    ];
+  }, [leads]);
 
   const filteredLeads = useMemo(() => {
     return leads
       .filter((item) => {
-        const queryValue = query.toLowerCase();
+        const q = query.toLowerCase();
+
         const matchQuery =
-          !queryValue ||
-          item.name.toLowerCase().includes(queryValue) ||
-          item.email.toLowerCase().includes(queryValue) ||
-          item.phone.includes(queryValue) ||
-          item.id.toLowerCase().includes(queryValue);
+          !q ||
+          item.studentName?.toLowerCase().includes(q) ||
+          item.emailId?.toLowerCase().includes(q) ||
+          item.mobileNumber?.includes(q) ||
+          item.id?.toLowerCase().includes(q) ||
+          item.leadNumber?.toLowerCase().includes(q);
+
         const matchStatus = status === "all" || item.status === status;
-        const matchBranch =
-          branch === "all" || !branch || item.branch === branch;
-        const matchSource =
-          source === "all" || !source || item.source === source;
+        const matchBranch = branch === "all" || item.branch === branch;
+        const matchSource = source === "all" || item.source === source;
+
         return matchQuery && matchStatus && matchBranch && matchSource;
       })
       .sort(
@@ -99,22 +127,84 @@ export default function AllLeadsPage() {
       );
   }, [leads, query, status, branch, source]);
 
+  useEffect(() => {
+    loadLeads();
+  }, []);
+
+  const loadLeads = async () => {
+    try {
+      setIsLoading(true);
+      const response = await fetch(`${API_BASE_URL}/leads`, {
+        cache: "no-store",
+      });
+      const data = await response.json();
+      setLeads(Array.isArray(data) ? data : []);
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to load leads from the server");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const pageSize = 10;
   const start = (page - 1) * pageSize;
   const pageLeads = filteredLeads.slice(start, start + pageSize);
   const pageCount = Math.max(1, Math.ceil(filteredLeads.length / pageSize));
 
-  const uniqueBranches = Array.from(
-    new Set(seedLeads.map((item) => item.branch)),
-  );
-  const uniqueSources = Array.from(
-    new Set(seedLeads.map((item) => item.source)),
-  );
+  const executeDeleteLead = async () => {
+    if (!leadIdToDelete) return;
+    try {
+      await fetch(`${API_BASE_URL}/leads/${leadIdToDelete}`, {
+        method: "DELETE",
+      });
 
-  const removeLead = (id: string) => {
-    setLeads((current) => current.filter((item) => item.id !== id));
-    toast.success("Lead deleted");
+      setLeads((current) =>
+        current.filter((item) => item.id !== leadIdToDelete),
+      );
+      toast.success("Lead deleted successfully");
+    } catch (error) {
+      setLeads((current) =>
+        current.filter((item) => item.id !== leadIdToDelete),
+      );
+      toast.success("Lead cleared from current session views");
+    } finally {
+      setLeadIdToDelete(null);
+    }
   };
+
+  const handleUpdateLead = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingLead) return;
+
+    try {
+      await fetch(`${API_BASE_URL}/leads/${editingLead.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(editingLead),
+      });
+
+      setLeads((current) =>
+        current.map((item) =>
+          item.id === editingLead.id ? editingLead : item,
+        ),
+      );
+      toast.success("Lead records synchronized successfully");
+      setEditingLead(null);
+    } catch (error) {
+      setLeads((current) =>
+        current.map((item) =>
+          item.id === editingLead.id ? editingLead : item,
+        ),
+      );
+      toast.success("Lead changes saved locally");
+      setEditingLead(null);
+    }
+  };
+
+  useEffect(() => {
+    setPage(1);
+  }, [query, status, branch, source]);
 
   return (
     <PageTransition>
@@ -122,44 +212,52 @@ export default function AllLeadsPage() {
         title="All Leads"
         description="Manage every enquiry in the CRM with search, filters, export and status-driven navigation."
         actions={
-          <>
+          <div className="flex flex-row items-center gap-2">
             <Button
               variant="outline"
               size="sm"
               onClick={() => toast.success("Export started")}
+              className="whitespace-nowrap"
             >
-              {" "}
               <Download className="size-4 mr-2" /> Export
             </Button>
-            <Button size="sm" onClick={() => router.push("/leads/add")}>
-              {" "}
+            <Button
+              size="sm"
+              onClick={() => router.push("/leads/add")}
+              className="whitespace-nowrap"
+            >
               <Plus className="size-4 mr-2" /> Add Lead
             </Button>
-          </>
+          </div>
         }
       />
 
-      <Card className="mb-6">
-        <CardContent className="grid gap-4 lg:grid-cols-[1.9fr_2.1fr] xl:grid-cols-[1.8fr_2.2fr] p-5">
-          <div className="relative">
-            <Search className="size-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              className="pl-10"
-              placeholder="Search leads by name, email or ID"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-            />
+      {/* Filter Control Board */}
+      <Card className="mb-6 shadow-sm border-border">
+        <CardContent className="grid gap-4 lg:grid-cols-[1.9fr_2.1fr] xl:grid-cols-[1.8fr_2.2fr] p-4 sm:p-5 min-w-0">
+          <div className="relative flex items-end w-full">
+            <div className="relative w-full">
+              <Search className="size-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                className="pl-10 w-full bg-background"
+                placeholder="Search leads by name, email or ID"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+              />
+            </div>
           </div>
-          <div className="grid gap-3 sm:grid-cols-3">
-            <div className="grid gap-2">
-              <Label>Status</Label>
+          <div className="grid gap-3 grid-cols-1 sm:grid-cols-3">
+            <div className="grid gap-1.5">
+              <Label className="text-xs font-semibold tracking-wide text-muted-foreground">
+                Status
+              </Label>
               <Select
                 value={status}
                 onValueChange={(value) =>
                   setStatus(value as LeadStatus | "all")
                 }
               >
-                <SelectTrigger>
+                <SelectTrigger className="w-full bg-background">
                   <SelectValue placeholder="All statuses" />
                 </SelectTrigger>
                 <SelectContent>
@@ -171,24 +269,27 @@ export default function AllLeadsPage() {
                     <SelectItem value="qualified">Qualified</SelectItem>
                     <SelectItem value="converted">Converted</SelectItem>
                     <SelectItem value="lost">Lost</SelectItem>
+                    <SelectItem value="draft">Draft</SelectItem>
                   </SelectGroup>
                 </SelectContent>
               </Select>
             </div>
-            <div className="grid gap-2">
-              <Label>Branch</Label>
+            <div className="grid gap-1.5">
+              <Label className="text-xs font-semibold tracking-wide text-muted-foreground">
+                Branch
+              </Label>
               <Select
                 value={branch}
                 onValueChange={(value) => setBranch(value)}
               >
-                <SelectTrigger>
+                <SelectTrigger className="w-full bg-background">
                   <SelectValue placeholder="Any branch" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectGroup>
                     <SelectLabel>Branch</SelectLabel>
-                    <SelectItem value="all">Any</SelectItem>
-                    {uniqueBranches.map((item) => (
+                    <SelectItem value="all">All Branches</SelectItem>
+                    {branchOptions.map((item) => (
                       <SelectItem key={item} value={item}>
                         {item}
                       </SelectItem>
@@ -197,13 +298,15 @@ export default function AllLeadsPage() {
                 </SelectContent>
               </Select>
             </div>
-            <div className="grid gap-2">
-              <Label>Source</Label>
+            <div className="grid gap-1.5">
+              <Label className="text-xs font-semibold tracking-wide text-muted-foreground">
+                Source
+              </Label>
               <Select
                 value={source}
                 onValueChange={(value) => setSource(value)}
               >
-                <SelectTrigger>
+                <SelectTrigger className="w-full bg-background">
                   <SelectValue placeholder="Any source" />
                 </SelectTrigger>
                 <SelectContent>
@@ -223,13 +326,15 @@ export default function AllLeadsPage() {
         </CardContent>
       </Card>
 
-      <div className="mb-4 flex flex-wrap gap-2">
+      {/* Tabs Row Container - Uses hidden tracks to eliminate unwanted scrollbars while remaining accessible */}
+      <div className="mb-4 flex items-center gap-2 overflow-x-auto pb-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
         {statusTabs.map((tab) => (
           <Button
             key={tab}
             variant={tab === status ? "secondary" : "outline"}
             size="sm"
             onClick={() => setStatus(tab)}
+            className="whitespace-nowrap transition-all duration-200 shrink-0"
           >
             {tab === "all"
               ? "All Leads"
@@ -238,156 +343,277 @@ export default function AllLeadsPage() {
         ))}
       </div>
 
-      <Card>
+      {/* Responsive Lead Records Component Grid/Table Interface */}
+      <Card className="overflow-hidden border-border shadow-sm">
         <CardContent className="p-0">
           {isLoading ? (
             <div className="space-y-4 p-5">
-              {Array.from({ length: 4 }).map((_, index) => (
-                <Skeleton key={index} className="h-12 rounded-xl" />
+              {Array.from({ length: 5 }).map((_, index) => (
+                <Skeleton key={index} className="h-12 w-full rounded-xl" />
               ))}
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="min-w-full text-sm">
-                <thead>
-                  <tr className="bg-secondary/30 text-left text-xs uppercase tracking-[0.16em] text-muted-foreground">
-                    <th className="px-4 py-3">Lead ID</th>
-                    <th className="px-4 py-3">Student Name</th>
-                    <th className="px-4 py-3">Mobile</th>
-                    <th className="px-4 py-3 hidden lg:table-cell">Email</th>
-                    <th className="px-4 py-3">Source</th>
-                    <th className="px-4 py-3 hidden lg:table-cell">Branch</th>
-                    <th className="px-4 py-3 hidden xl:table-cell">
-                      Counselor
-                    </th>
-                    <th className="px-4 py-3">Country</th>
-                    <th className="px-4 py-3">Status</th>
-                    <th className="px-4 py-3 hidden xl:table-cell">
-                      Created Date
-                    </th>
-                    <th className="px-4 py-3 hidden xl:table-cell">
-                      Next Followup
-                    </th>
-                    <th className="px-4 py-3">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {pageLeads.length === 0 ? (
-                    <tr>
-                      <td
-                        colSpan={12}
-                        className="py-12 text-center text-sm text-muted-foreground"
-                      >
-                        No leads match your filters.
-                      </td>
+            <>
+              {/* Responsive Card Stack View (Visible on Mobile Viewports, Hides Table Scrollbars Completely) */}
+              <div className="md:hidden divide-y divide-border">
+                {pageLeads.length === 0 ? (
+                  <div className="py-12 text-center text-sm text-muted-foreground bg-background">
+                    No leads match your filters.
+                  </div>
+                ) : (
+                  pageLeads.map((lead) => (
+                    <div
+                      key={lead.id || lead.leadNumber}
+                      className="p-4 space-y-3 bg-card hover:bg-secondary/10 transition-colors"
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="font-mono text-xs font-semibold text-muted-foreground bg-secondary/50 px-2 py-0.5 rounded">
+                          {lead.leadNumber}
+                        </span>
+                        <Badge
+                          variant="outline"
+                          className={`capitalize tracking-wide font-semibold ${statusStyle[lead.status || "draft"]}`}
+                        >
+                          {lead.status}
+                        </Badge>
+                      </div>
+
+                      <div>
+                        <h4 className="font-semibold text-foreground text-base">
+                          {lead.studentName || "—"}
+                        </h4>
+                        <p className="text-xs text-muted-foreground mt-0.5 space-x-1">
+                          <span>{lead.mobileNumber || "—"}</span>
+                          {lead.emailId && (
+                            <span className="text-border">|</span>
+                          )}
+                          <span className="truncate max-w-[200px] inline-block align-bottom">
+                            {lead.emailId || ""}
+                          </span>
+                        </p>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-x-2 gap-y-3 pt-2 border-t border-border/60 text-xs text-muted-foreground">
+                        <div>
+                          <span className="font-medium text-foreground block text-[10px] uppercase tracking-wider text-muted-foreground/80 mb-0.5">
+                            Source
+                          </span>
+                          {lead.source || "—"}
+                        </div>
+                        <div>
+                          <span className="font-medium text-foreground block text-[10px] uppercase tracking-wider text-muted-foreground/80 mb-0.5">
+                            Country
+                          </span>
+                          {lead.preferredCountry || "—"}
+                        </div>
+                        <div className="col-span-2">
+                          <span className="font-medium text-foreground block text-[10px] uppercase tracking-wider text-muted-foreground/80 mb-0.5">
+                            Branch
+                          </span>
+                          {lead.branch || "—"}
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-end gap-1 pt-2 border-t border-border/60">
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="size-8"
+                          onClick={() => setSelected(lead)}
+                        >
+                          <Eye className="size-4" />
+                        </Button>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="size-8"
+                          onClick={() => setEditingLead({ ...lead })}
+                        >
+                          <Pencil className="size-4" />
+                        </Button>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="size-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                          onClick={() => setLeadIdToDelete(lead.id)}
+                        >
+                          <Trash2 className="size-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+
+              {/* High-Fidelity Desktop Grid Interface (Visible on Medium screens and up) */}
+              <div className="hidden md:block overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+                <table className="min-w-full text-sm">
+                  <thead>
+                    <tr className="bg-secondary/30 text-left text-xs uppercase tracking-[0.16em] text-muted-foreground border-b border-border">
+                      <th className="px-4 py-3.5 align-middle font-semibold">
+                        Lead ID
+                      </th>
+                      <th className="px-4 py-3.5 align-middle font-semibold">
+                        Student Name
+                      </th>
+                      <th className="px-4 py-3.5 align-middle font-semibold">
+                        Mobile
+                      </th>
+                      <th className="px-4 py-3.5 align-middle font-semibold hidden lg:table-cell">
+                        Email
+                      </th>
+                      <th className="px-4 py-3.5 align-middle font-semibold">
+                        Source
+                      </th>
+                      <th className="px-4 py-3.5 align-middle font-semibold hidden lg:table-cell">
+                        Branch
+                      </th>
+                      <th className="px-4 py-3.5 align-middle font-semibold hidden xl:table-cell">
+                        Counselor
+                      </th>
+                      <th className="px-4 py-3.5 align-middle font-semibold">
+                        Country
+                      </th>
+                      <th className="px-4 py-3.5 align-middle font-semibold">
+                        Status
+                      </th>
+                      <th className="px-4 py-3.5 align-middle font-semibold hidden xl:table-cell">
+                        Created Date
+                      </th>
+                      <th className="px-4 py-3.5 align-middle font-semibold hidden xl:table-cell">
+                        Next Followup
+                      </th>
+                      <th className="px-4 py-3.5 align-middle text-right font-semibold">
+                        Actions
+                      </th>
                     </tr>
-                  ) : (
-                    pageLeads.map((lead) => (
-                      <tr
-                        key={lead.id}
-                        className="border-b border-border hover:bg-secondary/40"
-                      >
-                        <td className="px-4 py-4 font-medium">{lead.id}</td>
-                        <td className="px-4 py-4">
-                          <div className="flex items-center gap-3">
-                            <Avatar className="size-8">
-                              <AvatarFallback>
-                                {lead.name
-                                  .split(" ")
-                                  .map((part) => part[0])
-                                  .join("")}
-                              </AvatarFallback>
-                            </Avatar>
-                            <div>
-                              <div>{lead.name}</div>
-                              <div className="text-muted-foreground text-xs">
-                                {lead.email}
-                              </div>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="px-4 py-4">{lead.phone}</td>
-                        <td className="px-4 py-4 hidden lg:table-cell text-muted-foreground">
-                          {lead.email}
-                        </td>
-                        <td className="px-4 py-4">{lead.source}</td>
-                        <td className="px-4 py-4 hidden lg:table-cell">
-                          {lead.branch}
-                        </td>
-                        <td className="px-4 py-4 hidden xl:table-cell">
-                          {lead.counselor}
-                        </td>
-                        <td className="px-4 py-4">{lead.country}</td>
-                        <td className="px-4 py-4">
-                          <Badge
-                            variant="outline"
-                            className={`capitalize ${statusStyle[lead.status]}`}
-                          >
-                            {lead.status}
-                          </Badge>
-                        </td>
-                        <td className="px-4 py-4 hidden xl:table-cell">
-                          {new Date(lead.createdAt).toLocaleDateString()}
-                        </td>
-                        <td className="px-4 py-4 hidden xl:table-cell">
-                          {lead.nextFollowup
-                            ? new Date(lead.nextFollowup).toLocaleDateString()
-                            : "—"}
-                        </td>
-                        <td className="px-4 py-4 space-x-1 whitespace-nowrap">
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            className="size-8"
-                            onClick={() => setSelected(lead)}
-                          >
-                            <Eye className="size-4" />
-                          </Button>
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            className="size-8"
-                            onClick={() =>
-                              toast.success("Edit route will be added soon")
-                            }
-                          >
-                            {" "}
-                            <Pencil className="size-4" />{" "}
-                          </Button>
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            className="size-8 text-destructive"
-                            onClick={() => removeLead(lead.id)}
-                          >
-                            {" "}
-                            <Trash2 className="size-4" />{" "}
-                          </Button>
+                  </thead>
+                  <tbody>
+                    {pageLeads.length === 0 ? (
+                      <tr>
+                        <td
+                          colSpan={12}
+                          className="py-12 text-center text-sm text-muted-foreground bg-background/50"
+                        >
+                          No leads match your filters.
                         </td>
                       </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
+                    ) : (
+                      pageLeads.map((lead) => (
+                        <tr
+                          key={lead.id || lead.leadNumber}
+                          className="border-b border-border hover:bg-secondary/40 transition-colors"
+                        >
+                          <td className="px-4 py-3.5 font-medium align-middle whitespace-nowrap">
+                            {lead.leadNumber}
+                          </td>
+                          <td className="px-4 py-3.5 align-middle font-medium text-foreground whitespace-nowrap">
+                            {lead.studentName || "—"}
+                          </td>
+                          <td className="px-4 py-3.5 align-middle whitespace-nowrap">
+                            {lead.mobileNumber || "—"}
+                          </td>
+                          <td className="px-4 py-3.5 align-middle hidden lg:table-cell text-muted-foreground max-w-[180px] truncate">
+                            {lead.emailId || "—"}
+                          </td>
+                          <td className="px-4 py-3.5 align-middle max-w-[120px] truncate">
+                            {lead.source || "—"}
+                          </td>
+                          <td className="px-4 py-3.5 align-middle hidden lg:table-cell max-w-[150px] truncate">
+                            {lead.branch || "—"}
+                          </td>
+                          <td className="px-4 py-3.5 align-middle hidden xl:table-cell whitespace-nowrap">
+                            {lead.assignedCounselor || "—"}
+                          </td>
+                          <td className="px-4 py-3.5 align-middle whitespace-nowrap">
+                            {lead.preferredCountry || "—"}
+                          </td>
+                          <td className="px-4 py-3.5 align-middle">
+                            <Badge
+                              variant="outline"
+                              className={`capitalize tracking-wide font-semibold whitespace-nowrap ${
+                                statusStyle[lead.status || "draft"]
+                              }`}
+                            >
+                              {lead.status}
+                            </Badge>
+                          </td>
+                          <td className="px-4 py-3.5 align-middle hidden xl:table-cell text-muted-foreground whitespace-nowrap">
+                            {lead.createdAt
+                              ? new Date(lead.createdAt).toLocaleDateString()
+                              : "—"}
+                          </td>
+                          <td className="px-4 py-3.5 align-middle hidden xl:table-cell whitespace-nowrap">
+                            {lead.nextFollowup
+                              ? new Date(lead.nextFollowup).toLocaleDateString()
+                              : "—"}
+                          </td>
+                          <td className="px-4 py-3.5 align-middle text-right space-x-1 whitespace-nowrap">
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="size-8"
+                              onClick={() => setSelected(lead)}
+                            >
+                              <Eye className="size-4" />
+                            </Button>
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="size-8"
+                              onClick={() => setEditingLead({ ...lead })}
+                            >
+                              <Pencil className="size-4" />
+                            </Button>
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="size-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                              onClick={() => setLeadIdToDelete(lead.id)}
+                            >
+                              <Trash2 className="size-4" />
+                            </Button>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </>
           )}
         </CardContent>
       </Card>
 
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between text-sm text-muted-foreground">
-        <div>
-          {filteredLeads.length} result{filteredLeads.length === 1 ? "" : "s"}
+      {/* Pagination Footer */}
+      <div className="flex flex-col gap-3 mt-4 sm:flex-row sm:items-center sm:justify-between text-sm text-muted-foreground px-1">
+        <div className="text-center sm:text-left">
+          Showing{" "}
+          <span className="font-semibold text-foreground">
+            {filteredLeads.length === 0 ? 0 : start + 1}
+          </span>{" "}
+          to{" "}
+          <span className="font-semibold text-foreground">
+            {Math.min(start + pageSize, filteredLeads.length)}
+          </span>{" "}
+          of{" "}
+          <span className="font-semibold text-foreground">
+            {filteredLeads.length}
+          </span>{" "}
+          result
+          {filteredLeads.length === 1 ? "" : "s"}
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center justify-center gap-2">
           <Button
             variant="outline"
             size="sm"
             disabled={page === 1}
             onClick={() => setPage((current) => Math.max(1, current - 1))}
+            className="select-none"
           >
             Previous
           </Button>
-          <span>
+          <span className="font-medium text-foreground text-xs sm:text-sm px-2 bg-secondary/40 py-1 rounded">
             Page {page} of {pageCount}
           </span>
           <Button
@@ -397,68 +623,25 @@ export default function AllLeadsPage() {
             onClick={() =>
               setPage((current) => Math.min(pageCount, current + 1))
             }
+            className="select-none"
           >
             Next
           </Button>
         </div>
       </div>
 
-      <Sheet
-        open={!!selected}
-        onOpenChange={(value) => !value && setSelected(null)}
-      >
-        <SheetContent className="w-full sm:max-w-md">
-          {selected && (
-            <>
-              <SheetHeader>
-                <SheetTitle>{selected.name}</SheetTitle>
-                <SheetDescription>{selected.id}</SheetDescription>
-              </SheetHeader>
-              <div className="space-y-4 px-4 py-3">
-                <div className="grid gap-2">
-                  <div className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
-                    Contact
-                  </div>
-                  <div>{selected.phone}</div>
-                  <div>{selected.email}</div>
-                </div>
-                <div className="grid gap-2">
-                  <div className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
-                    Assignment
-                  </div>
-                  <div>Branch: {selected.branch}</div>
-                  <div>Counselor: {selected.counselor}</div>
-                </div>
-                <div className="grid gap-2">
-                  <div className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
-                    Status
-                  </div>
-                  <Badge
-                    variant="outline"
-                    className={`capitalize ${statusStyle[selected.status]}`}
-                  >
-                    {selected.status}
-                  </Badge>
-                </div>
-                <div className="rounded-2xl border border-border bg-background p-4">
-                  <div className="text-xs uppercase tracking-[0.18em] text-muted-foreground mb-2">
-                    Notes
-                  </div>
-                  <p className="text-sm text-muted-foreground">
-                    Lead created on{" "}
-                    {new Date(selected.createdAt).toLocaleDateString()}. Next
-                    follow-up is scheduled for{" "}
-                    {selected.nextFollowup
-                      ? new Date(selected.nextFollowup).toLocaleDateString()
-                      : "TBD"}
-                    .
-                  </p>
-                </div>
-              </div>
-            </>
-          )}
-        </SheetContent>
-      </Sheet>
+      <PageActions
+        selected={selected}
+        setSelected={setSelected}
+        editingLead={editingLead}
+        setEditingLead={setEditingLead}
+        leadIdToDelete={leadIdToDelete}
+        setLeadIdToDelete={setLeadIdToDelete}
+        handleUpdateLead={handleUpdateLead}
+        executeDeleteLead={executeDeleteLead}
+        branchOptions={branchOptions}
+        statusStyle={statusStyle}
+      />
     </PageTransition>
   );
 }

@@ -1,5 +1,6 @@
+// crm-frontend-next\app\(dashboard)\leads\add\page.tsx
 "use client";
-import { useMemo } from "react";
+
 import { z } from "zod";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -12,61 +13,65 @@ import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
-  SelectGroup,
   SelectItem,
-  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import {
+  CalendarIcon,
+  GraduationCap,
+  MapPin,
+  Globe,
+  BookOpen,
+  Briefcase,
+} from "lucide-react";
 
 const leadFormSchema = z.object({
-  firstName: z.string().min(1, "First name is required"),
-  lastName: z.string().min(1, "Last name is required"),
-  email: z.string().email("Enter a valid email"),
-  mobileNumber: z.string().min(10, "Enter a valid mobile number"),
-  alternateMobile: z.string().optional(),
-  dob: z.string().optional(),
-  gender: z.enum(["Male", "Female", "Other"]).optional(),
-  highestQualification: z.string().min(1, "Qualification is required"),
-  percentage: z
-    .number({ invalid_type_error: "Percentage is required" })
-    .min(0)
-    .max(100),
-  passingYear: z
-    .number({ invalid_type_error: "Passing year is required" })
-    .min(2000)
-    .max(2035),
-  ieltsScore: z.string().optional(),
-  pteScore: z.string().optional(),
-  toeflScore: z.string().optional(),
-  duolingoScore: z.string().optional(),
-  preferredCountry: z.string().min(1, "Select a preferred country"),
-  preferredCourse: z.string().min(1, "Preferred course is required"),
-  preferredIntake: z.string().min(1, "Preferred intake is required"),
-  preferredIntakeYear: z.string().min(1, "Preferred intake year is required"),
-  budget: z.string().min(1, "Budget is required"),
-  leadSource: z.string().min(1, "Lead source is required"),
+  counsellingDate: z.string().optional(),
+  studentName: z.string().min(1, "Student name is required"),
+  mobileNumber: z
+    .string()
+    .min(10, "Must be at least 10 digits")
+    .max(10, "Cannot exceed 10 digits")
+    .regex(/^[0-9]+$/, "Must be numbers only"),
+  emailId: z
+    .string()
+    .min(1, "Email is required")
+    .email("Invalid email address"),
+  place: z.string().optional(),
+  passport: z.string().optional(),
+  tenthPercentage: z.number().optional(),
+  tenthYearOfPassing: z.number().optional(),
+  twelfthPercentage: z.number().optional(),
+  twelfthYearOfPassing: z.number().optional(),
+  bachelorsCourse: z.string().optional(),
+  bachelorsUniversityName: z.string().optional(),
+  bachelorsPercentage: z.number().optional(),
+  bachelorsYearOfPassing: z.number().optional(),
+  backlogs: z.number().optional(),
+  workExperience: z.string().optional(),
+  preferredCountry: z.string().optional(),
+  preferredIntake: z.string().optional(),
+  preferredCourse: z.string().optional(),
+  greGmatScore: z.number().optional(),
+  quantitativeScore: z.number().optional(),
+  verbalScore: z.number().optional(),
+  analyticalWritingScore: z.number().optional(),
+  englishTestType: z.string().optional(),
+  listeningScore: z.number().optional(),
+  writingScore: z.number().optional(),
+  readingScore: z.number().optional(),
+  speakingScore: z.number().optional(),
+  gapsIfAny: z.string().optional(),
+  status: z.string().optional(),
+  source: z.string().optional(),
   branch: z.string().min(1, "Branch is required"),
-  assignedCounselor: z.string().min(1, "Assigned counselor is required"),
-  leadStatus: z.string().min(1, "Lead status is required"),
-  referralSource: z.string().optional(),
-  notes: z.string().optional(),
 });
 
 type LeadFormValues = z.infer<typeof leadFormSchema>;
 
-const genderOptions = ["Male", "Female", "Other"];
-const qualificationOptions = [
-  "High School",
-  "Diploma",
-  "Bachelors",
-  "Masters",
-  "PhD",
-];
-const intakeOptions = ["Fall", "Spring", "Summer", "Winter"];
-const intakeYears = ["2025", "2026", "2027", "2028"];
 const countryOptions = [
   "USA",
   "UK",
@@ -75,308 +80,507 @@ const countryOptions = [
   "Germany",
   "Ireland",
   "New Zealand",
-  "France",
 ];
+const intakeOptions = ["Spring", "Summer", "Fall", "Winter"];
+const englishTestOptions = ["IELTS", "TOEFL", "DUOLINGO", "PTE"];
 const sourceOptions = [
   "Website",
-  "Referral",
-  "Walk-in",
-  "Education Fair",
+  "Walk-In",
+  "Facebook",
+  "Instagram",
   "Google Ads",
-  "Social Media",
+  "Referral",
+  "WhatsApp",
+  "LinkedIn",
 ];
-const branchOptions = ["Hyderabad", "Bangalore", "Chennai", "Delhi", "Mumbai"];
-const counselorOptions = [
-  "Aditi Rao",
-  "Vinod Bansal",
-  "Sneha Kapoor",
-  "Manoj Verma",
-  "Pooja Iyer",
-];
-const statusOptions = ["New", "Contacted", "Qualified", "Converted", "Lost"];
 
+const branchOptions = [
+  "Dilsukhnagar Branch",
+  "Ameerpet Branch",
+  "KPHB - JNTU Branch",
+  "Vijayawada Branch",
+  "Visakhapatnam Branch",
+  "Tirupathi Branch",
+  "Bengaluru Branch",
+];
 export default function AddLeadPage() {
   const router = useRouter();
 
   const {
-    control,
     register,
+    control,
     handleSubmit,
     reset,
     formState: { errors, isSubmitting },
   } = useForm<LeadFormValues>({
     resolver: zodResolver(leadFormSchema),
     defaultValues: {
-      firstName: "",
-      lastName: "",
-      email: "",
+      counsellingDate: new Date().toISOString().split("T")[0],
+      studentName: "",
       mobileNumber: "",
-      alternateMobile: "",
-      dob: "",
-      gender: "",
-      highestQualification: "Bachelors",
-      percentage: 70,
-      passingYear: 2025,
-      ieltsScore: "",
-      pteScore: "",
-      toeflScore: "",
-      duolingoScore: "",
-      preferredCountry: "USA",
-      preferredCourse: "MBA",
-      preferredIntake: "Fall",
-      preferredIntakeYear: "2026",
-      budget: "",
-      leadSource: "Website",
-      branch: "Hyderabad",
-      assignedCounselor: "Aditi Rao",
-      leadStatus: "New",
-      referralSource: "",
-      notes: "",
+      emailId: "",
+      place: "",
+      passport: "",
+      source: "",
+      branch: "",
+      status: "draft",
     },
   });
 
   const onSubmit = async (values: LeadFormValues, continueFlow = false) => {
-    await new Promise((resolve) => setTimeout(resolve, 300));
-    toast.success("Lead saved successfully");
+    try {
+      const response = await fetch("http://localhost:4000/leads", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(values),
+      });
 
-    if (continueFlow) {
-      router.push("/leads/all");
-      return;
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Failed");
+      }
+
+      toast.success("Lead created successfully");
+
+      if (continueFlow) {
+        router.push("/leads/all");
+        return;
+      }
+
+      reset();
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to create lead");
     }
-
-    reset(values);
   };
-
-  const handleReset = () => reset();
-
-  const sections = useMemo(
-    () => [
-      {
-        title: "Personal Information",
-        fields: [
-          "firstName",
-          "lastName",
-          "email",
-          "mobileNumber",
-          "alternateMobile",
-          "dob",
-          "gender",
-        ],
-      },
-      {
-        title: "Academic Information",
-        fields: [
-          "highestQualification",
-          "percentage",
-          "passingYear",
-          "ieltsScore",
-          "pteScore",
-          "toeflScore",
-          "duolingoScore",
-        ],
-      },
-      {
-        title: "Study Preferences",
-        fields: [
-          "preferredCountry",
-          "preferredCourse",
-          "preferredIntake",
-          "preferredIntakeYear",
-          "budget",
-        ],
-      },
-      {
-        title: "Lead Information",
-        fields: [
-          "leadSource",
-          "branch",
-          "assignedCounselor",
-          "leadStatus",
-          "referralSource",
-        ],
-      },
-    ],
-    [],
-  );
 
   return (
     <PageTransition>
-      <PageHeader
-        title="Add Lead"
-        description="Capture the full profile for a new enquiry and assign a counselor immediately."
-      />
+      <div className="mx-auto max-w-6xl space-y-6 pb-12">
+        <PageHeader
+          title="Add New Lead"
+          description="Register a new student for counselling and process tracking."
+        />
 
-      <Card>
-        <CardContent className="space-y-8">
-          <div className="grid gap-4 md:grid-cols-2">
-            <div className="space-y-3 rounded-3xl border border-border bg-background p-6">
-              <div className="text-sm font-semibold">Personal Information</div>
-              <div className="grid gap-4 md:grid-cols-2">
-                <div className="grid gap-2">
-                  <Label htmlFor="firstName">First Name</Label>
-                  <Input id="firstName" {...register("firstName")} />
-                  {errors.firstName && (
-                    <p className="text-xs text-destructive">
-                      {errors.firstName.message}
+        <form className="space-y-8">
+          {/* Section 1: Basic Information */}
+          <Card className="overflow-hidden border-t-4 border-t-primary shadow-sm">
+            <div className="bg-muted/50 px-6 py-4 border-b">
+              <h3 className="flex items-center text-lg font-semibold text-foreground">
+                <MapPin className="mr-2 h-5 w-5 text-primary" />
+                Basic Information
+              </h3>
+            </div>
+            <CardContent className="p-6">
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+                <div className="space-y-2">
+                  <Label htmlFor="counsellingDate">Counselling Date</Label>
+                  <Input
+                    id="counsellingDate"
+                    type="date"
+                    {...register("counsellingDate")}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label
+                    htmlFor="studentName"
+                    className="after:content-['*'] after:ml-0.5 after:text-red-500"
+                  >
+                    Student Name
+                  </Label>
+                  <Input
+                    id="studentName"
+                    placeholder="ex: Rahul"
+                    {...register("studentName")}
+                  />
+                  {errors.studentName && (
+                    <p className="text-sm font-medium text-destructive">
+                      {errors.studentName.message}
                     </p>
                   )}
                 </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="lastName">Last Name</Label>
-                  <Input id="lastName" {...register("lastName")} />
-                  {errors.lastName && (
-                    <p className="text-xs text-destructive">
-                      {errors.lastName.message}
-                    </p>
-                  )}
-                </div>
-                <div className="grid gap-2 md:col-span-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input id="email" type="email" {...register("email")} />
-                  {errors.email && (
-                    <p className="text-xs text-destructive">
-                      {errors.email.message}
-                    </p>
-                  )}
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="mobileNumber">Mobile Number</Label>
-                  <Input id="mobileNumber" {...register("mobileNumber")} />
+
+                <div className="space-y-2">
+                  <Label
+                    htmlFor="mobileNumber"
+                    className="after:content-['*'] after:ml-0.5 after:text-red-500"
+                  >
+                    Mobile Number
+                  </Label>
+                  <Input
+                    type="tel"
+                    id="mobileNumber"
+                    placeholder="9876543210"
+                    maxLength={10}
+                    // This event handler ensures only numbers are accepted
+                    onInput={(e: React.FormEvent<HTMLInputElement>) => {
+                      e.currentTarget.value = e.currentTarget.value.replace(
+                        /[^0-9]/g,
+                        "",
+                      );
+                    }}
+                    {...register("mobileNumber")}
+                  />
                   {errors.mobileNumber && (
-                    <p className="text-xs text-destructive">
+                    <p className="text-sm font-medium text-destructive">
                       {errors.mobileNumber.message}
                     </p>
                   )}
                 </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="alternateMobile">Alternate Mobile</Label>
+
+                <div className="space-y-2">
+                  <Label
+                    htmlFor="emailId"
+                    className="after:content-['*'] after:ml-0.5 after:text-red-500"
+                  >
+                    Email Address
+                  </Label>
                   <Input
-                    id="alternateMobile"
-                    {...register("alternateMobile")}
+                    id="emailId"
+                    type="email"
+                    placeholder="rahul@example.com"
+                    {...register("emailId")}
+                  />
+                  {errors.emailId && (
+                    <p className="text-sm font-medium text-destructive">
+                      {errors.emailId.message}
+                    </p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="place">City / Place</Label>
+                  <Input
+                    id="place"
+                    placeholder="Hyderabad"
+                    {...register("place")}
                   />
                 </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="dob">Date of Birth</Label>
-                  <Input id="dob" type="date" {...register("dob")} />
+
+                <div className="space-y-2">
+                  <Label htmlFor="passport">Passport Number</Label>
+                  <Input
+                    id="passport"
+                    placeholder="U12345678"
+                    {...register("passport")}
+                  />
                 </div>
-                <div className="grid gap-2">
-                  <Label>Gender</Label>
+                <div className="space-y-2">
+                  <Label>Lead Source</Label>
                   <Controller
                     control={control}
-                    name="gender"
+                    name="source"
                     render={({ field }) => (
                       <Select
+                        value={field.value ?? ""}
                         onValueChange={field.onChange}
-                        value={field.value || ""}
                       >
                         <SelectTrigger>
-                          <SelectValue placeholder="Select gender" />
+                          <SelectValue placeholder="Select Source" />
                         </SelectTrigger>
+
                         <SelectContent>
-                          <SelectGroup>
-                            <SelectLabel>Gender</SelectLabel>
-                            {genderOptions.map((item) => (
-                              <SelectItem key={item} value={item}>
-                                {item}
-                              </SelectItem>
-                            ))}
-                          </SelectGroup>
+                          {sourceOptions.map((item) => (
+                            <SelectItem key={item} value={item}>
+                              {item}
+                            </SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                     )}
                   />
                 </div>
-              </div>
-            </div>
+                <div className="space-y-2">
+                  <Label className="after:content-['*'] after:ml-0.5 after:text-red-500">
+                    Branch
+                  </Label>
 
-            <div className="space-y-3 rounded-3xl border border-border bg-background p-6">
-              <div className="text-sm font-semibold">Academic Information</div>
-              <div className="grid gap-4 md:grid-cols-2">
-                <div className="grid gap-2 md:col-span-2">
-                  <Label>Highest Qualification</Label>
                   <Controller
                     control={control}
-                    name="highestQualification"
+                    name="branch"
                     render={({ field }) => (
                       <Select
+                        value={field.value ?? ""}
                         onValueChange={field.onChange}
-                        value={field.value}
                       >
                         <SelectTrigger>
-                          <SelectValue placeholder="Select qualification" />
+                          <SelectValue placeholder="Select Branch" />
                         </SelectTrigger>
+
                         <SelectContent>
-                          <SelectGroup>
-                            <SelectLabel>Qualification</SelectLabel>
-                            {qualificationOptions.map((item) => (
-                              <SelectItem key={item} value={item}>
-                                {item}
-                              </SelectItem>
-                            ))}
-                          </SelectGroup>
+                          {branchOptions.map((item) => (
+                            <SelectItem key={item} value={item}>
+                              {item}
+                            </SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                     )}
                   />
-                  {errors.highestQualification && (
-                    <p className="text-xs text-destructive">
-                      {errors.highestQualification.message}
+
+                  {errors.branch && (
+                    <p className="text-sm font-medium text-destructive">
+                      {errors.branch.message}
                     </p>
                   )}
                 </div>
-                <div className="grid gap-2">
-                  <Label>Percentage</Label>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Section 2: Educational Information */}
+          <Card className="overflow-hidden border-t-4 border-t-primary shadow-sm">
+            <div className="bg-muted/50 px-6 py-4 border-b">
+              <h3 className="flex items-center text-lg font-semibold text-foreground">
+                <GraduationCap className="mr-2 h-5 w-5 text-blue-500" />
+                Educational Information
+              </h3>
+            </div>
+            <CardContent className="space-y-8 p-6">
+              {/* Schooling */}
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+                <div className="space-y-2">
+                  <Label>10th Percentage (%)</Label>
                   <Input
+                    placeholder="e.g. 85"
                     type="number"
-                    step="0.1"
-                    {...register("percentage", { valueAsNumber: true })}
+                    {...register("tenthPercentage", { valueAsNumber: true })}
                   />
-                  {errors.percentage && (
-                    <p className="text-xs text-destructive">
-                      {errors.percentage.message}
-                    </p>
-                  )}
                 </div>
-                <div className="grid gap-2">
-                  <Label>Passing Year</Label>
+                <div className="space-y-2">
+                  <Label>10th Year of Passing</Label>
                   <Input
+                    placeholder="YYYY"
                     type="number"
-                    {...register("passingYear", { valueAsNumber: true })}
+                    {...register("tenthYearOfPassing", { valueAsNumber: true })}
                   />
-                  {errors.passingYear && (
-                    <p className="text-xs text-destructive">
-                      {errors.passingYear.message}
-                    </p>
-                  )}
                 </div>
-                <div className="grid gap-2">
-                  <Label>IELTS Score</Label>
-                  <Input {...register("ieltsScore")} placeholder="e.g. 6.5" />
-                </div>
-                <div className="grid gap-2">
-                  <Label>PTE Score</Label>
-                  <Input {...register("pteScore")} placeholder="e.g. 60" />
-                </div>
-                <div className="grid gap-2">
-                  <Label>TOEFL Score</Label>
-                  <Input {...register("toeflScore")} placeholder="e.g. 90" />
-                </div>
-                <div className="grid gap-2">
-                  <Label>Duolingo Score</Label>
+                <div className="space-y-2">
+                  <Label>12th Percentage (%)</Label>
                   <Input
-                    {...register("duolingoScore")}
-                    placeholder="e.g. 110"
+                    placeholder="e.g. 88"
+                    type="number"
+                    {...register("twelfthPercentage", { valueAsNumber: true })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>12th Year of Passing</Label>
+                  <Input
+                    placeholder="YYYY"
+                    type="number"
+                    {...register("twelfthYearOfPassing", {
+                      valueAsNumber: true,
+                    })}
                   />
                 </div>
               </div>
-            </div>
-          </div>
 
-          <div className="grid gap-4 md:grid-cols-2">
-            <div className="space-y-3 rounded-3xl border border-border bg-background p-6 md:col-span-2">
-              <div className="text-sm font-semibold">Study Preferences</div>
-              <div className="grid gap-4 md:grid-cols-3">
-                <div className="grid gap-2">
+              <div className="border-t pt-6" />
+
+              {/* Bachelors */}
+              <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4">
+                Bachelor's Degree
+              </h4>
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+                <div className="space-y-2 lg:col-span-2">
+                  <Label>University / College Name</Label>
+                  <Input
+                    placeholder="Enter institution name"
+                    {...register("bachelorsUniversityName")}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Course / Major</Label>
+                  <Input
+                    placeholder="e.g. B.Tech Computer Science"
+                    {...register("bachelorsCourse")}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>CGPA / Percentage</Label>
+                  <Input
+                    placeholder="e.g. 75 or 8.5"
+                    type="number"
+                    step="0.01"
+                    {...register("bachelorsPercentage", {
+                      valueAsNumber: true,
+                    })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Year of Passing</Label>
+                  <Input
+                    placeholder="YYYY"
+                    type="number"
+                    {...register("bachelorsYearOfPassing", {
+                      valueAsNumber: true,
+                    })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Active Backlogs</Label>
+                  <Input
+                    placeholder="0"
+                    type="number"
+                    {...register("backlogs", { valueAsNumber: true })}
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2 pt-2">
+                <Label>Education Gaps (If Any)</Label>
+                <Textarea
+                  placeholder="Explain any gaps in education..."
+                  rows={2}
+                  {...register("gapsIfAny")}
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Section 3: Test Scores */}
+          <Card className="overflow-hidden border-t-4 border-t-primary shadow-sm">
+            <div className="bg-muted/50 px-6 py-4 border-b">
+              <h3 className="flex items-center text-lg font-semibold text-foreground">
+                <BookOpen className="mr-2 h-5 w-5 text-purple-500" />
+                Test Scores
+              </h3>
+            </div>
+            <CardContent className="space-y-8 p-6">
+              <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
+                {/* English Proficiency */}
+                <div className="space-y-4 rounded-xl border p-4 bg-muted/20">
+                  <h4 className="font-medium text-foreground">
+                    English Proficiency Test
+                  </h4>
+                  <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+                    <div className="space-y-2 col-span-2 sm:col-span-3">
+                      <Label>Test Type</Label>
+                      <Controller
+                        control={control}
+                        name="englishTestType"
+                        render={({ field }) => (
+                          <Select
+                            onValueChange={field.onChange}
+                            value={field.value}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select Test" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {englishTestOptions.map((i) => (
+                                <SelectItem key={i} value={i}>
+                                  {i}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        )}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-xs">Listening</Label>
+                      <Input
+                        placeholder="L Score"
+                        type="number"
+                        step="0.5"
+                        {...register("listeningScore", { valueAsNumber: true })}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-xs">Reading</Label>
+                      <Input
+                        placeholder="R Score"
+                        type="number"
+                        step="0.5"
+                        {...register("readingScore", { valueAsNumber: true })}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-xs">Writing</Label>
+                      <Input
+                        placeholder="W Score"
+                        type="number"
+                        step="0.5"
+                        {...register("writingScore", { valueAsNumber: true })}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-xs">Speaking</Label>
+                      <Input
+                        placeholder="S Score"
+                        type="number"
+                        step="0.5"
+                        {...register("speakingScore", { valueAsNumber: true })}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* GRE/GMAT */}
+                <div className="space-y-4 rounded-xl border p-4 bg-muted/20">
+                  <h4 className="font-medium text-foreground">GRE / GMAT</h4>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2 col-span-2">
+                      <Label>Total Score</Label>
+                      <Input
+                        placeholder="Overall Score"
+                        type="number"
+                        {...register("greGmatScore", { valueAsNumber: true })}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-xs">Quantitative (Q)</Label>
+                      <Input
+                        placeholder="Q Score"
+                        type="number"
+                        {...register("quantitativeScore", {
+                          valueAsNumber: true,
+                        })}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-xs">Verbal (V)</Label>
+                      <Input
+                        placeholder="V Score"
+                        type="number"
+                        {...register("verbalScore", { valueAsNumber: true })}
+                      />
+                    </div>
+                    <div className="space-y-2 col-span-2">
+                      <Label className="text-xs">
+                        Analytical Writing (AWA)
+                      </Label>
+                      <Input
+                        placeholder="AWA Score"
+                        type="number"
+                        step="0.5"
+                        {...register("analyticalWritingScore", {
+                          valueAsNumber: true,
+                        })}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Section 4: Preferences & Experience */}
+          <Card className="overflow-hidden border-t-4 border-t-primary shadow-sm">
+            <div className="bg-muted/50 px-6 py-4 border-b">
+              <h3 className="flex items-center text-lg font-semibold text-foreground">
+                <Globe className="mr-2 h-5 w-5 text-emerald-500" />
+                Study Preferences & Experience
+              </h3>
+            </div>
+            <CardContent className="space-y-6 p-6">
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+                <div className="space-y-2">
                   <Label>Preferred Country</Label>
                   <Controller
                     control={control}
@@ -387,37 +591,21 @@ export default function AddLeadPage() {
                         value={field.value}
                       >
                         <SelectTrigger>
-                          <SelectValue placeholder="Select country" />
+                          <SelectValue placeholder="Select Country" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectGroup>
-                            <SelectLabel>Country</SelectLabel>
-                            {countryOptions.map((item) => (
-                              <SelectItem key={item} value={item}>
-                                {item}
-                              </SelectItem>
-                            ))}
-                          </SelectGroup>
+                          {countryOptions.map((i) => (
+                            <SelectItem key={i} value={i}>
+                              {i}
+                            </SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                     )}
                   />
-                  {errors.preferredCountry && (
-                    <p className="text-xs text-destructive">
-                      {errors.preferredCountry.message}
-                    </p>
-                  )}
                 </div>
-                <div className="grid gap-2">
-                  <Label>Preferred Course</Label>
-                  <Input {...register("preferredCourse")} />
-                  {errors.preferredCourse && (
-                    <p className="text-xs text-destructive">
-                      {errors.preferredCourse.message}
-                    </p>
-                  )}
-                </div>
-                <div className="grid gap-2">
+
+                <div className="space-y-2">
                   <Label>Preferred Intake</Label>
                   <Controller
                     control={control}
@@ -428,209 +616,88 @@ export default function AddLeadPage() {
                         value={field.value}
                       >
                         <SelectTrigger>
-                          <SelectValue placeholder="Select intake" />
+                          <SelectValue placeholder="Select Intake" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectGroup>
-                            <SelectLabel>Intake</SelectLabel>
-                            {intakeOptions.map((item) => (
-                              <SelectItem key={item} value={item}>
-                                {item}
-                              </SelectItem>
-                            ))}
-                          </SelectGroup>
+                          {intakeOptions.map((i) => (
+                            <SelectItem key={i} value={i}>
+                              {i}
+                            </SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                     )}
                   />
                 </div>
-                <div className="grid gap-2">
-                  <Label>Preferred Intake Year</Label>
-                  <Controller
-                    control={control}
-                    name="preferredIntakeYear"
-                    render={({ field }) => (
-                      <Select
-                        onValueChange={field.onChange}
-                        value={field.value}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select year" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectGroup>
-                            <SelectLabel>Year</SelectLabel>
-                            {intakeYears.map((year) => (
-                              <SelectItem key={year} value={year}>
-                                {year}
-                              </SelectItem>
-                            ))}
-                          </SelectGroup>
-                        </SelectContent>
-                      </Select>
-                    )}
-                  />
-                </div>
-                <div className="grid gap-2 md:col-span-2">
-                  <Label>Budget</Label>
+
+                <div className="space-y-2">
+                  <Label>Preferred Course</Label>
                   <Input
-                    {...register("budget")}
-                    placeholder="e.g. 15,000 USD"
+                    placeholder="e.g. MS in Data Science"
+                    {...register("preferredCourse")}
                   />
-                  {errors.budget && (
-                    <p className="text-xs text-destructive">
-                      {errors.budget.message}
-                    </p>
-                  )}
                 </div>
               </div>
-            </div>
-          </div>
 
-          <div className="space-y-3 rounded-3xl border border-border bg-background p-6">
-            <div className="text-sm font-semibold">Lead Information</div>
-            <div className="grid gap-4 md:grid-cols-3">
-              <div className="grid gap-2">
-                <Label>Lead Source</Label>
-                <Controller
-                  control={control}
-                  name="leadSource"
-                  render={({ field }) => (
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Lead source" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectGroup>
-                          <SelectLabel>Lead Source</SelectLabel>
-                          {sourceOptions.map((item) => (
-                            <SelectItem key={item} value={item}>
-                              {item}
-                            </SelectItem>
-                          ))}
-                        </SelectGroup>
-                      </SelectContent>
-                    </Select>
-                  )}
+              <div className="space-y-2 pt-2">
+                <Label className="flex items-center">
+                  <Briefcase className="mr-2 h-4 w-4" /> Work Experience
+                </Label>
+                <Textarea
+                  placeholder="Details of current or past employment..."
+                  rows={3}
+                  {...register("workExperience")}
                 />
               </div>
-              <div className="grid gap-2">
-                <Label>Branch</Label>
-                <Controller
-                  control={control}
-                  name="branch"
-                  render={({ field }) => (
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select branch" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectGroup>
-                          <SelectLabel>Branch</SelectLabel>
-                          {branchOptions.map((item) => (
-                            <SelectItem key={item} value={item}>
-                              {item}
-                            </SelectItem>
-                          ))}
-                        </SelectGroup>
-                      </SelectContent>
-                    </Select>
-                  )}
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label>Assigned Counselor</Label>
-                <Controller
-                  control={control}
-                  name="assignedCounselor"
-                  render={({ field }) => (
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select counselor" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectGroup>
-                          <SelectLabel>Counselor</SelectLabel>
-                          {counselorOptions.map((item) => (
-                            <SelectItem key={item} value={item}>
-                              {item}
-                            </SelectItem>
-                          ))}
-                        </SelectGroup>
-                      </SelectContent>
-                    </Select>
-                  )}
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label>Lead Status</Label>
-                <Controller
-                  control={control}
-                  name="leadStatus"
-                  render={({ field }) => (
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select status" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectGroup>
-                          <SelectLabel>Status</SelectLabel>
-                          {statusOptions.map((item) => (
-                            <SelectItem key={item} value={item}>
-                              {item}
-                            </SelectItem>
-                          ))}
-                        </SelectGroup>
-                      </SelectContent>
-                    </Select>
-                  )}
-                />
-              </div>
-              <div className="grid gap-2 md:col-span-3">
-                <Label>Referral Source</Label>
-                <Input {...register("referralSource")} />
-              </div>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
 
-          <div className="rounded-3xl border border-border bg-background p-6">
-            <div className="text-sm font-semibold mb-3">Notes</div>
-            <Textarea
-              rows={5}
-              {...register("notes")}
-              placeholder="Add any important context or next steps here."
-            />
-          </div>
-
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
+          {/* Sticky/Fixed Bottom Action Bar */}
+          <div className="sticky bottom-4 z-10 flex flex-col-reverse gap-3 rounded-2xl bg-background/80 p-4 shadow-lg backdrop-blur-md border sm:flex-row sm:justify-end">
             <Button
-              variant="outline"
               type="button"
-              onClick={handleReset}
+              variant="outline"
               className="w-full sm:w-auto"
+              onClick={() => reset()}
             >
-              Reset
+              Reset Form
             </Button>
             <Button
               type="button"
               variant="secondary"
               className="w-full sm:w-auto"
-              onClick={handleSubmit((values) => onSubmit(values, false))}
               disabled={isSubmitting}
+              onClick={handleSubmit((values) =>
+                onSubmit(
+                  {
+                    ...values,
+                    status: "draft",
+                  },
+                  false,
+                ),
+              )}
             >
-              Save Lead
+              Save as Draft
             </Button>
             <Button
               type="button"
               className="w-full sm:w-auto"
-              onClick={handleSubmit((values) => onSubmit(values, true))}
               disabled={isSubmitting}
+              onClick={handleSubmit((values) =>
+                onSubmit(
+                  {
+                    ...values,
+                    status: "new",
+                  },
+                  true,
+                ),
+              )}
             >
-              Save & Continue
+              Save Lead & Continue
             </Button>
           </div>
-        </CardContent>
-      </Card>
+        </form>
+      </div>
     </PageTransition>
   );
 }

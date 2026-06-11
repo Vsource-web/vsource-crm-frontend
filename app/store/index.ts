@@ -1,3 +1,4 @@
+// crm-frontend-next\app\store\index.ts
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { authService, type LoginDto } from "@/services/auth.service";

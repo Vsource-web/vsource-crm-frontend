@@ -1,4 +1,4 @@
-export type LeadStatus = "new" | "contacted" | "qualified" | "converted" | "lost";
+export type LeadStatus = "new" | "contacted" | "qualified" | "converted" | "lost" | "draft";
 export type ApplicationStage = "inquiry" | "documents" | "applied" | "offer" | "visa" | "enrolled";
 
 export interface Lead {
