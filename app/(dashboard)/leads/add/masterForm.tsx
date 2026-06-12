@@ -35,14 +35,6 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import {
-  Country,
-  Intake,
-  LeadSource,
-  getCountries,
-  getIntakes,
-  getLeadSources,
-} from "@/lib/master-settings";
 
 const leadFormSchema = z.object({
   counsellingDate: z.string().optional(),
@@ -88,14 +80,40 @@ const leadFormSchema = z.object({
 
 type LeadFormValues = z.infer<typeof leadFormSchema>;
 
+const countryOptions = [
+  "USA",
+  "UK",
+  "Canada",
+  "Australia",
+  "Germany",
+  "Ireland",
+  "New Zealand",
+];
+const intakeOptions = ["Spring", "Summer", "Fall", "Winter"];
 const englishTestOptions = ["IELTS", "TOEFL", "DUOLINGO", "PTE"];
+const sourceOptions = [
+  "Website",
+  "Walk-In",
+  "Facebook",
+  "Instagram",
+  "Google Ads",
+  "Referral",
+  "WhatsApp",
+  "LinkedIn",
+];
 
+const branchOptions = [
+  "Dilsukhnagar Branch",
+  "Ameerpet Branch",
+  "KPHB - JNTU Branch",
+  "Vijayawada Branch",
+  "Visakhapatnam Branch",
+  "Tirupathi Branch",
+  "Bengaluru Branch",
+];
 export default function AddLeadPage() {
   const router = useRouter();
   const [branches, setBranches] = useState<Branch[]>([]);
-  const [countries, setCountries] = useState<Country[]>([]);
-  const [intakes, setIntakes] = useState<Intake[]>([]);
-  const [leadSources, setLeadSources] = useState<LeadSource[]>([]);
   const {
     register,
     control,
@@ -129,26 +147,6 @@ export default function AddLeadPage() {
     };
 
     loadBranches();
-  }, []);
-  useEffect(() => {
-    const loadMasters = async () => {
-      try {
-        const [countryData, intakeData, sourceData] = await Promise.all([
-          getCountries(),
-          getIntakes(),
-          getLeadSources(),
-        ]);
-
-        setCountries(countryData);
-        setIntakes(intakeData);
-        setLeadSources(sourceData);
-      } catch (error) {
-        console.error(error);
-        toast.error("Failed to load master data");
-      }
-    };
-
-    loadMasters();
   }, []);
   const onSubmit = async (values: LeadFormValues, continueFlow = false) => {
     try {
@@ -313,9 +311,9 @@ export default function AddLeadPage() {
                           </SelectTrigger>
 
                           <SelectContent>
-                            {leadSources.map((item) => (
-                              <SelectItem key={item.id} value={item.name}>
-                                {item.name}
+                            {sourceOptions.map((item) => (
+                              <SelectItem key={item} value={item}>
+                                {item}
                               </SelectItem>
                             ))}
                           </SelectContent>
@@ -656,9 +654,9 @@ export default function AddLeadPage() {
                             <SelectValue placeholder="Select Country" />
                           </SelectTrigger>
                           <SelectContent>
-                            {countries.map((country) => (
-                              <SelectItem key={country.id} value={country.name}>
-                                {country.name}
+                            {countryOptions.map((i) => (
+                              <SelectItem key={i} value={i}>
+                                {i}
                               </SelectItem>
                             ))}
                           </SelectContent>
@@ -681,9 +679,9 @@ export default function AddLeadPage() {
                             <SelectValue placeholder="Select Intake" />
                           </SelectTrigger>
                           <SelectContent>
-                            {intakes.map((intake) => (
-                              <SelectItem key={intake.id} value={intake.name}>
-                                {intake.name}
+                            {intakeOptions.map((i) => (
+                              <SelectItem key={i} value={i}>
+                                {i}
                               </SelectItem>
                             ))}
                           </SelectContent>

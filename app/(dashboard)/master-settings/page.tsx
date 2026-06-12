@@ -1,132 +1,176 @@
 "use client";
-import { useState } from "react";
+
+import { useEffect, useState } from "react";
 
 import { PageHeader, PageTransition } from "@/components/common/PageHeader";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
 import { Plus, Trash2 } from "lucide-react";
-// import { masterData } from "@/data/mock";
+
 import { toast } from "sonner";
-const masterData = {
-  visaStatus: [
-    "Not Applied",
-    "Filed",
-    "Slot Booked",
-    "Interview Done",
-    "Granted",
-    "Refused",
-  ],
-  courseTypes: ["Bachelors", "Masters", "PhD", "Diploma", "Certificate"],
-  banks: [
-    "HDFC Credila",
-    "Avanse",
-    "Axis Bank",
-    "SBI",
-    "ICICI",
-    "Auxilo",
-    "InCred",
-  ],
-  expenseTypes: [
-    "Marketing",
-    "Salaries",
-    "Rent",
-    "Utilities",
-    "Travel",
-    "Software",
-  ],
-  leadStatuses: ["New", "Contacted", "Qualified", "Converted", "Lost"],
-  intakes: ["Fall 2025", "Spring 2026", "Summer 2026", "Fall 2026"],
-  applicationStatuses: [
-    "Inquiry",
-    "Documents",
-    "Applied",
-    "Offer",
-    "Visa",
-    "Enrolled",
-  ],
-};
+
+import {
+  MasterItem,
+  getMasters,
+  createMaster,
+  deleteMaster,
+} from "@/lib/master-settings";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
 const categories = [
-  { key: "visaStatus", label: "Visa Status" },
-  { key: "courseTypes", label: "Course Types" },
-  { key: "banks", label: "Banks" },
-  { key: "expenseTypes", label: "Expense Types" },
-  { key: "leadStatuses", label: "Lead Status" },
-  { key: "intakes", label: "Intakes" },
-  { key: "applicationStatuses", label: "Application Status" },
-] as const;
+  {
+    key: "countries",
+    label: "Countries",
+    endpoint: "/countries",
+  },
+  {
+    key: "intakes",
+    label: "Intakes",
+    endpoint: "/intakes",
+  },
+  {
+    key: "lead-sources",
+    label: "Lead Sources",
+    endpoint: "/lead-sources",
+  },
+];
 
 export default function MasterSettings() {
-  const [data, setData] = useState<Record<string, string[]>>(
-    masterData as unknown as Record<string, string[]>,
+  const [selected, setSelected] = useState<(typeof categories)[number]["key"]>(
+    categories[0].key,
   );
-  const [tab, setTab] = useState<string>(categories[0].key);
-  const [val, setVal] = useState("");
+  const [items, setItems] = useState<MasterItem[]>([]);
+  const [value, setValue] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const add = () => {
-    if (!val.trim()) return;
-    setData({ ...data, [tab]: [...data[tab], val.trim()] });
-    setVal("");
-    toast.success("Added");
+  const current = categories.find((x) => x.key === selected)!;
+
+  const loadData = async () => {
+    try {
+      setLoading(true);
+
+      const data = await getMasters(current.endpoint);
+
+      setItems(data);
+    } catch {
+      toast.error("Failed to load data");
+    } finally {
+      setLoading(false);
+    }
   };
-  const remove = (item: string) => {
-    setData({ ...data, [tab]: data[tab].filter((i) => i !== item) });
-    toast.success("Removed");
+
+  useEffect(() => {
+    loadData();
+  }, [selected]);
+
+  const handleAdd = async () => {
+    if (!value.trim()) {
+      return;
+    }
+
+    try {
+      await createMaster(current.endpoint, value.trim());
+
+      toast.success(`${current.label} added`);
+
+      setValue("");
+      await loadData();
+    } catch {
+      toast.error("Failed to add");
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    try {
+      await deleteMaster(current.endpoint, id);
+
+      toast.success("Deleted");
+      await loadData();
+    } catch {
+      toast.error("Failed to delete");
+    }
   };
 
   return (
     <PageTransition>
-      <PageHeader
-        title="Master Settings"
-        description="Centralized configuration for system-wide masters."
-      />
-      <Card>
-        <CardContent className="p-4 md:p-6">
-          <Tabs value={tab} onValueChange={setTab}>
-            <TabsList className="flex-wrap h-auto">
-              {categories.map((c) => (
-                <TabsTrigger key={c.key} value={c.key}>
-                  {c.label}
-                </TabsTrigger>
-              ))}
-            </TabsList>
-            {categories.map((c) => (
-              <TabsContent key={c.key} value={c.key} className="mt-4">
-                <div className="flex gap-2 mb-4">
-                  <Input
-                    placeholder={`Add new ${c.label.toLowerCase()}…`}
-                    value={val}
-                    onChange={(e) => setVal(e.target.value)}
-                    onKeyDown={(e) => e.key === "Enter" && add()}
-                  />
-                  <Button onClick={add}>
-                    <Plus className="size-4 mr-1.5" /> Add
-                  </Button>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {data[c.key]?.map((item) => (
-                    <Badge
-                      key={item}
-                      variant="outline"
-                      className="text-sm py-1.5 px-3 gap-2 hover:border-destructive transition-colors group"
+      <div className="space-y-6">
+        <PageHeader
+          title="Master Settings"
+          description="Manage Countries, Intakes and Lead Sources"
+        />
+
+        <Card>
+          <CardContent className="space-y-6 p-6">
+            <Tabs
+              value={selected}
+              onValueChange={(value) =>
+                setSelected(value as (typeof categories)[number]["key"])
+              }
+            >
+              <TabsList className="grid w-full grid-cols-3 max-w-xl">
+                {categories.map((item) => (
+                  <TabsTrigger key={item.key} value={item.key}>
+                    {item.label}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+            </Tabs>
+
+            <div className="flex flex-col gap-3 sm:flex-row">
+              <Input
+                className="flex-1"
+                value={value}
+                onChange={(e) => setValue(e.target.value)}
+                placeholder={`Add new ${current.label.slice(0, -1)}`}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    handleAdd();
+                  }
+                }}
+              />
+
+              <Button onClick={handleAdd}>
+                <Plus className="mr-2 h-4 w-4" />
+                Add
+              </Button>
+            </div>
+
+            <div className="space-y-2">
+              {loading ? (
+                <p>Loading...</p>
+              ) : (
+                items.map((item) => (
+                  <div
+                    key={item.id}
+                    className="flex items-center justify-between rounded-2xl border bg-card px-4 py-3 shadow-sm"
+                  >
+                    <span>{item.name}</span>
+
+                    <Button
+                      variant="destructive"
+                      size="icon"
+                      onClick={() => handleDelete(item.id)}
                     >
-                      {item}
-                      <button
-                        onClick={() => remove(item)}
-                        className="text-muted-foreground group-hover:text-destructive"
-                      >
-                        <Trash2 className="size-3" />
-                      </button>
-                    </Badge>
-                  ))}
-                </div>
-              </TabsContent>
-            ))}
-          </Tabs>
-        </CardContent>
-      </Card>
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </PageTransition>
   );
 }

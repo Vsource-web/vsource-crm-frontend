@@ -1,4 +1,3 @@
-// crm-frontend-next\app\(dashboard)\leads\all\pageactions.tsx
 "use client";
 
 import type { LeadStatus } from "@/types";
@@ -32,19 +31,70 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Branch, getBranches } from "@/lib/branches";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
 
 interface LeadRecord {
   id: string;
   leadNumber: string;
+
+  counsellingDate?: string | null;
+
   studentName?: string;
   mobileNumber?: string;
   emailId?: string;
+
+  place?: string;
+  passport?: string;
+
   source?: string;
-  branch?: string;
-  preferredCountry?: string;
+
+  branch?: {
+    id: string;
+    name: string;
+  };
+
   assignedCounselor?: string;
+  assignedCounselorId?: string;
+
+  preferredCountry?: string;
+  preferredIntake?: string;
+  preferredCourse?: string;
+
+  tenthPercentage?: number;
+  tenthYearOfPassing?: number;
+
+  twelfthPercentage?: number;
+  twelfthYearOfPassing?: number;
+
+  bachelorsCourse?: string;
+  bachelorsUniversityName?: string;
+  bachelorsPercentage?: number;
+  bachelorsYearOfPassing?: number;
+
+  backlogs?: number;
+
+  workExperience?: string;
+
+  greGmatScore?: number;
+  quantitativeScore?: number;
+  verbalScore?: number;
+  analyticalWritingScore?: number;
+
+  englishTestType?: string;
+  listeningScore?: number;
+  readingScore?: number;
+  writingScore?: number;
+  speakingScore?: number;
+
+  gapsIfAny?: string;
+
+  isConverted?: boolean;
+
   remarks?: string;
   nextFollowup?: string | null;
+
   status: LeadStatus;
   createdAt: string;
 }
@@ -64,6 +114,21 @@ interface PageActionsProps {
 
   branchOptions: string[];
   statusStyle: Record<LeadStatus, string>;
+
+  countries: {
+    id: string;
+    name: string;
+  }[];
+
+  intakes: {
+    id: string;
+    name: string;
+  }[];
+
+  leadSources: {
+    id: string;
+    name: string;
+  }[];
 }
 
 export default function PageActions(props: PageActionsProps) {
@@ -78,7 +143,61 @@ export default function PageActions(props: PageActionsProps) {
     executeDeleteLead,
     branchOptions,
     statusStyle,
+    countries,
+    intakes,
+    leadSources,
   } = props;
+  const [branches, setBranches] = useState<Branch[]>([]);
+
+  useEffect(() => {
+    const loadBranches = async () => {
+      try {
+        const data = await getBranches();
+        setBranches(data);
+      } catch (error) {
+        console.error(error);
+        toast.error("Failed to load branches");
+      }
+    };
+
+    loadBranches();
+  }, []);
+
+  function DetailItem({
+    label,
+    value,
+  }: {
+    label: string;
+    value?: string | number | null;
+  }) {
+    return (
+      <div>
+        <p className="mb-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+          {label}
+        </p>
+        <p className="text-sm font-medium break-words">{value || "—"}</p>
+      </div>
+    );
+  }
+
+  function DetailBlock({
+    label,
+    value,
+  }: {
+    label: string;
+    value?: string | null;
+  }) {
+    return (
+      <div>
+        <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+          {label}
+        </p>
+        <div className="rounded-lg bg-muted/30 p-3 text-sm whitespace-pre-wrap">
+          {value || "—"}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -87,115 +206,189 @@ export default function PageActions(props: PageActionsProps) {
         open={!!selected}
         onOpenChange={(value) => !value && setSelected(null)}
       >
-        <SheetContent className="w-full sm:max-w-md overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+        <SheetContent className="w-full sm:max-w-4xl overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
           {selected && (
             <>
-              <SheetHeader className="pb-4 border-b border-border">
-                <SheetTitle className="text-xl font-bold tracking-tight text-foreground">
-                  {selected.studentName || "Unspecified Profile File"}
+              <SheetHeader className="border-b pb-4">
+                <SheetTitle className="text-2xl font-bold">
+                  {selected.studentName}
                 </SheetTitle>
-                <SheetDescription className="font-mono text-xs text-muted-foreground bg-muted p-2 rounded border border-border/40 mt-1">
-                  System UID: {selected.id} <br /> Lead Index Ref:{" "}
-                  {selected.leadNumber}
+                <SheetDescription>
+                  Lead Number: {selected.leadNumber}
                 </SheetDescription>
               </SheetHeader>
-              <div className="space-y-6 pt-6">
-                <div className="grid gap-2">
-                  <div className="text-xs uppercase font-bold tracking-wider text-muted-foreground/90">
-                    Contact Information
+
+              <div className="space-y-6 py-6">
+                {/* BASIC INFORMATION */}
+                <div className="rounded-xl border bg-card">
+                  <div className="border-b px-5 py-3">
+                    <h3 className="font-semibold text-lg">Basic Information</h3>
                   </div>
-                  <div className="text-sm font-medium text-foreground bg-secondary/20 p-3 rounded-lg border border-border/40 space-y-1">
-                    <div>Mobile: {selected.mobileNumber || "N/A"}</div>
-                    <div className="text-muted-foreground text-xs truncate">
-                      Email: {selected.emailId || "N/A"}
-                    </div>
+                  <div className="grid grid-cols-1 gap-4 p-5 md:grid-cols-2 lg:grid-cols-3">
+                    <DetailItem
+                      label="Student Name"
+                      value={selected.studentName}
+                    />
+                    <DetailItem
+                      label="Mobile Number"
+                      value={selected.mobileNumber}
+                    />
+                    <DetailItem
+                      label="Email Address"
+                      value={selected.emailId}
+                    />
+                    <DetailItem label="Place" value={selected.place} />
+                    <DetailItem
+                      label="Passport Number"
+                      value={selected.passport}
+                    />
+                    <DetailItem label="Lead Source" value={selected.source} />
+                    <DetailItem label="Branch" value={selected.branch?.name} />
                   </div>
                 </div>
 
-                <div className="grid gap-2">
-                  <div className="text-xs uppercase font-bold tracking-wider text-muted-foreground/90">
-                    Assignment & Funnel Attributes
+                {/* EDUCATIONAL INFORMATION */}
+                <div className="rounded-xl border bg-card">
+                  <div className="border-b px-5 py-3">
+                    <h3 className="font-semibold text-lg">
+                      Educational Information
+                    </h3>
                   </div>
-                  <div className="text-sm space-y-2 bg-secondary/10 p-3 rounded-lg border border-border/30">
-                    <div className="flex justify-between border-b border-border/40 pb-1.5">
-                      <span className="text-muted-foreground">
-                        Branch Allocation:
-                      </span>{" "}
-                      <span className="font-medium text-foreground text-right">
-                        {selected.branch || "Unassigned"}
-                      </span>
-                    </div>
-                    <div className="flex justify-between border-b border-border/40 pb-1.5">
-                      <span className="text-muted-foreground">
-                        Assigned Counselor:
-                      </span>{" "}
-                      <span className="font-medium text-foreground text-right">
-                        {selected.assignedCounselor || "Unassigned"}
-                      </span>
-                    </div>
-                    <div className="flex justify-between border-b border-border/40 pb-1.5">
-                      <span className="text-muted-foreground">
-                        Target Destination:
-                      </span>{" "}
-                      <span className="font-medium text-foreground text-right">
-                        {selected.preferredCountry || "N/A"}
-                      </span>
-                    </div>
-                    <div className="flex justify-between pt-0.5">
-                      <span className="text-muted-foreground">
-                        Source Stream:
-                      </span>{" "}
-                      <span className="font-medium text-foreground text-right">
-                        {selected.source || "N/A"}
-                      </span>
-                    </div>
+                  <div className="grid grid-cols-1 gap-4 p-5 md:grid-cols-2 lg:grid-cols-3">
+                    <DetailItem
+                      label="10th Percentage"
+                      value={selected.tenthPercentage}
+                    />
+                    <DetailItem
+                      label="10th Passing Year"
+                      value={selected.tenthYearOfPassing}
+                    />
+                    <DetailItem
+                      label="12th Percentage"
+                      value={selected.twelfthPercentage}
+                    />
+                    <DetailItem
+                      label="12th Passing Year"
+                      value={selected.twelfthYearOfPassing}
+                    />
+                    <DetailItem
+                      label="University"
+                      value={selected.bachelorsUniversityName}
+                    />
+                    <DetailItem
+                      label="Course"
+                      value={selected.bachelorsCourse}
+                    />
+                    <DetailItem
+                      label="Bachelor Percentage"
+                      value={selected.bachelorsPercentage}
+                    />
+                    <DetailItem
+                      label="Bachelor Passing Year"
+                      value={selected.bachelorsYearOfPassing}
+                    />
+                    <DetailItem label="Backlogs" value={selected.backlogs} />
                   </div>
-                </div>
-
-                <div className="grid gap-2">
-                  <div className="text-xs uppercase font-bold tracking-wider text-muted-foreground/90">
-                    Pipeline Funnel Status
-                  </div>
-                  <div>
-                    <Badge
-                      variant="outline"
-                      className={`capitalize font-semibold text-sm px-3 py-1 ${statusStyle[selected.status]}`}
-                    >
-                      {selected.status}
-                    </Badge>
+                  <div className="border-t p-5">
+                    <DetailBlock
+                      label="Education Gaps"
+                      value={selected.gapsIfAny}
+                    />
                   </div>
                 </div>
 
-                <div className="rounded-xl border border-border bg-muted/50 p-4 space-y-3">
-                  <div>
-                    <div className="text-xs uppercase font-bold tracking-wider text-muted-foreground/90 mb-1">
-                      Internal System Logs
-                    </div>
-                    <p className="text-xs text-muted-foreground leading-relaxed">
-                      Lead created into index matrix on{" "}
-                      <span className="font-medium text-foreground">
-                        {new Date(selected.createdAt).toLocaleDateString()}
-                      </span>
-                      . Next operational followup target callback response is
-                      scheduled for:{" "}
-                      <span className="font-semibold text-foreground">
-                        {selected.nextFollowup
+                {/* TEST SCORES */}
+                <div className="rounded-xl border bg-card">
+                  <div className="border-b px-5 py-3">
+                    <h3 className="font-semibold text-lg">Test Scores</h3>
+                  </div>
+                  <div className="grid grid-cols-1 gap-4 p-5 md:grid-cols-2 lg:grid-cols-3">
+                    <DetailItem
+                      label="English Test"
+                      value={selected.englishTestType}
+                    />
+                    <DetailItem
+                      label="Listening"
+                      value={selected.listeningScore}
+                    />
+                    <DetailItem label="Reading" value={selected.readingScore} />
+                    <DetailItem label="Writing" value={selected.writingScore} />
+                    <DetailItem
+                      label="Speaking"
+                      value={selected.speakingScore}
+                    />
+                    <DetailItem
+                      label="GRE / GMAT"
+                      value={selected.greGmatScore}
+                    />
+                    <DetailItem
+                      label="Quantitative"
+                      value={selected.quantitativeScore}
+                    />
+                    <DetailItem label="Verbal" value={selected.verbalScore} />
+                    <DetailItem
+                      label="AWA"
+                      value={selected.analyticalWritingScore}
+                    />
+                  </div>
+                </div>
+
+                {/* STUDY PREFERENCES */}
+                <div className="rounded-xl border bg-card">
+                  <div className="border-b px-5 py-3">
+                    <h3 className="font-semibold text-lg">
+                      Study Preferences & Experience
+                    </h3>
+                  </div>
+                  <div className="grid grid-cols-1 gap-4 p-5 md:grid-cols-2 lg:grid-cols-3">
+                    <DetailItem
+                      label="Preferred Country"
+                      value={selected.preferredCountry}
+                    />
+                    <DetailItem
+                      label="Preferred Intake"
+                      value={selected.preferredIntake}
+                    />
+                    <DetailItem
+                      label="Preferred Course"
+                      value={selected.preferredCourse}
+                    />
+                  </div>
+                  <div className="border-t p-5">
+                    <DetailBlock
+                      label="Work Experience"
+                      value={selected.workExperience}
+                    />
+                  </div>
+                </div>
+
+                {/* CRM INFORMATION */}
+                <div className="rounded-xl border bg-card">
+                  <div className="border-b px-5 py-3">
+                    <h3 className="font-semibold text-lg">CRM Information</h3>
+                  </div>
+                  <div className="grid grid-cols-1 gap-4 p-5 md:grid-cols-2 lg:grid-cols-3">
+                    <DetailItem label="Status" value={selected.status} />
+                    <DetailItem
+                      label="Created Date"
+                      value={
+                        selected.createdAt
+                          ? new Date(selected.createdAt).toLocaleDateString()
+                          : "-"
+                      }
+                    />
+                    <DetailItem
+                      label="Next Followup"
+                      value={
+                        selected.nextFollowup
                           ? new Date(selected.nextFollowup).toLocaleDateString()
-                          : "TBD"}
-                      </span>
-                      .
-                    </p>
+                          : "-"
+                      }
+                    />
                   </div>
-                  {selected.remarks && (
-                    <div className="text-xs text-foreground bg-background p-2.5 rounded border border-border shadow-sm">
-                      <span className="font-bold text-muted-foreground block text-[10px] uppercase tracking-wider mb-1">
-                        Latest Management Remarks:
-                      </span>
-                      <p className="whitespace-pre-wrap leading-normal text-muted-foreground">
-                        {selected.remarks}
-                      </p>
-                    </div>
-                  )}
+                  <div className="border-t p-5">
+                    <DetailBlock label="Remarks" value={selected.remarks} />
+                  </div>
                 </div>
               </div>
             </>
@@ -208,7 +401,7 @@ export default function PageActions(props: PageActionsProps) {
         open={!!editingLead}
         onOpenChange={(value) => !value && setEditingLead(null)}
       >
-        <SheetContent className="w-full sm:max-w-md overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+        <SheetContent className="w-full sm:max-w-lg overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
           {editingLead && (
             <form
               onSubmit={handleUpdateLead}
@@ -228,8 +421,9 @@ export default function PageActions(props: PageActionsProps) {
                   </SheetDescription>
                 </SheetHeader>
 
-                <div className="space-y-4">
-                  <div className="grid gap-1.5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {/* Student Name */}
+                  <div className="grid gap-1.5 sm:col-span-2">
                     <Label htmlFor="edit-name" className="text-sm font-medium">
                       Student Name
                     </Label>
@@ -246,50 +440,91 @@ export default function PageActions(props: PageActionsProps) {
                     />
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="grid gap-1.5">
-                      <Label
-                        htmlFor="edit-mobile"
-                        className="text-sm font-medium"
-                      >
-                        Mobile Number
-                      </Label>
-                      <Input
-                        id="edit-mobile"
-                        className="bg-background"
-                        value={editingLead.mobileNumber || ""}
-                        onChange={(e) =>
-                          setEditingLead({
-                            ...editingLead,
-                            mobileNumber: e.target.value,
-                          })
-                        }
-                      />
-                    </div>
-                    <div className="grid gap-1.5">
-                      <Label
-                        htmlFor="edit-email"
-                        className="text-sm font-medium"
-                      >
-                        Email Address
-                      </Label>
-                      <Input
-                        id="edit-email"
-                        type="email"
-                        className="bg-background"
-                        value={editingLead.emailId || ""}
-                        onChange={(e) =>
-                          setEditingLead({
-                            ...editingLead,
-                            emailId: e.target.value,
-                          })
-                        }
-                      />
-                    </div>
+                  {/* Mobile Number */}
+                  <div className="grid gap-1.5">
+                    <Label
+                      htmlFor="edit-mobile"
+                      className="text-sm font-medium"
+                    >
+                      Mobile Number
+                    </Label>
+                    <Input
+                      id="edit-mobile"
+                      className="bg-background"
+                      value={editingLead.mobileNumber || ""}
+                      onChange={(e) =>
+                        setEditingLead({
+                          ...editingLead,
+                          mobileNumber: e.target.value,
+                        })
+                      }
+                    />
                   </div>
 
+                  {/* Email Address */}
                   <div className="grid gap-1.5">
-                    <Label className="text-sm font-medium">
+                    <Label htmlFor="edit-email" className="text-sm font-medium">
+                      Email Address
+                    </Label>
+                    <Input
+                      id="edit-email"
+                      type="email"
+                      className="bg-background"
+                      value={editingLead.emailId || ""}
+                      onChange={(e) =>
+                        setEditingLead({
+                          ...editingLead,
+                          emailId: e.target.value,
+                        })
+                      }
+                    />
+                  </div>
+
+                  {/* Place */}
+                  <div className="grid gap-1.5">
+                    <Label htmlFor="edit-place" className="text-sm font-medium">
+                      Place
+                    </Label>
+                    <Input
+                      id="edit-place"
+                      className="bg-background"
+                      value={editingLead.place || ""}
+                      onChange={(e) =>
+                        setEditingLead({
+                          ...editingLead,
+                          place: e.target.value,
+                        })
+                      }
+                    />
+                  </div>
+
+                  {/* Passport Number */}
+                  <div className="grid gap-1.5">
+                    <Label
+                      htmlFor="edit-passport"
+                      className="text-sm font-medium"
+                    >
+                      Passport Number
+                    </Label>
+                    <Input
+                      id="edit-passport"
+                      className="bg-background"
+                      value={editingLead.passport || ""}
+                      onChange={(e) =>
+                        setEditingLead({
+                          ...editingLead,
+                          passport: e.target.value,
+                        })
+                      }
+                    />
+                  </div>
+
+                  {/* Pipeline Status */}
+                  <div className="grid gap-1.5 sm:col-span-2">
+                    <Label
+                      htmlFor="edit-status"
+                      className="text-sm font-medium"
+                    >
                       Pipeline Status
                     </Label>
                     <Select
@@ -301,7 +536,10 @@ export default function PageActions(props: PageActionsProps) {
                         })
                       }
                     >
-                      <SelectTrigger className="w-full bg-background">
+                      <SelectTrigger
+                        id="edit-status"
+                        className="w-full bg-background"
+                      >
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -315,33 +553,44 @@ export default function PageActions(props: PageActionsProps) {
                     </Select>
                   </div>
 
-                  <div className="grid gap-1.5">
-                    <Label className="text-sm font-medium">
+                  {/* Assigned Branch - Synced dynamically with loaded branches */}
+                  <div className="grid gap-1.5 sm:col-span-2">
+                    <Label
+                      htmlFor="edit-branch"
+                      className="text-sm font-medium"
+                    >
                       Assigned Branch
                     </Label>
                     <Select
-                      value={editingLead.branch || "all"}
-                      onValueChange={(val) =>
+                      value={editingLead.branch?.id || ""}
+                      onValueChange={(val) => {
+                        const targetBranch = branches.find((b) => b.id === val);
                         setEditingLead({
                           ...editingLead,
-                          branch: val === "all" ? undefined : val,
-                        })
-                      }
+                          branch: targetBranch
+                            ? { id: targetBranch.id, name: targetBranch.name }
+                            : undefined,
+                        });
+                      }}
                     >
-                      <SelectTrigger className="w-full bg-background">
-                        <SelectValue placeholder="Select Branch Allocation" />
+                      <SelectTrigger
+                        id="edit-branch"
+                        className="w-full bg-white h-11 border-slate-200 rounded-xl"
+                      >
+                        <SelectValue placeholder="Select Branch" />
                       </SelectTrigger>
                       <SelectContent>
-                        {branchOptions.map((b) => (
-                          <SelectItem key={b} value={b}>
-                            {b}
+                        {branches.map((branch) => (
+                          <SelectItem key={branch.id} value={branch.id}>
+                            {branch.name}
                           </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
                   </div>
 
-                  <div className="grid gap-1.5">
+                  {/* Assigned Counselor */}
+                  <div className="grid gap-1.5 sm:col-span-2">
                     <Label
                       htmlFor="edit-counselor"
                       className="text-sm font-medium"
@@ -350,7 +599,9 @@ export default function PageActions(props: PageActionsProps) {
                     </Label>
                     <Input
                       id="edit-counselor"
-                      className="bg-background"
+                      type="text"
+                      placeholder="Counselor Name"
+                      className="w-full bg-white h-11 border-slate-200 rounded-xl placeholder:text-slate-400"
                       value={editingLead.assignedCounselor || ""}
                       onChange={(e) =>
                         setEditingLead({
@@ -358,52 +609,113 @@ export default function PageActions(props: PageActionsProps) {
                           assignedCounselor: e.target.value,
                         })
                       }
-                      placeholder="Counselor Name"
                     />
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="grid gap-1.5">
-                      <Label
-                        htmlFor="edit-country"
-                        className="text-sm font-medium"
-                      >
-                        Preferred Country
-                      </Label>
-                      <Input
+                  {/* Preferred Country */}
+                  <div className="grid gap-1.5">
+                    <Label
+                      htmlFor="edit-country"
+                      className="text-sm font-medium"
+                    >
+                      Preferred Country
+                    </Label>
+                    <Select
+                      value={editingLead.preferredCountry || ""}
+                      onValueChange={(val) =>
+                        setEditingLead({
+                          ...editingLead,
+                          preferredCountry: val,
+                        })
+                      }
+                    >
+                      <SelectTrigger
                         id="edit-country"
-                        className="bg-background"
-                        value={editingLead.preferredCountry || ""}
-                        onChange={(e) =>
-                          setEditingLead({
-                            ...editingLead,
-                            preferredCountry: e.target.value,
-                          })
-                        }
-                      />
-                    </div>
-                    <div className="grid gap-1.5">
-                      <Label
-                        htmlFor="edit-source"
-                        className="text-sm font-medium"
+                        className="w-full bg-white h-11 border-slate-200 rounded-xl"
                       >
-                        Lead Source
-                      </Label>
-                      <Input
-                        id="edit-source"
-                        className="bg-background"
-                        value={editingLead.source || ""}
-                        onChange={(e) =>
-                          setEditingLead({
-                            ...editingLead,
-                            source: e.target.value,
-                          })
-                        }
-                      />
-                    </div>
+                        <SelectValue placeholder="Select Country" />
+                      </SelectTrigger>
+                     <SelectContent>
+  {intakes.map((intake) => (
+    <SelectItem
+      key={intake.id}
+      value={intake.name}
+    >
+      {intake.name}
+    </SelectItem>
+  ))}
+</SelectContent>
+                    </Select>
                   </div>
 
+                  {/* Preferred Intake */}
                   <div className="grid gap-1.5">
+                    <Label
+                      htmlFor="edit-intake"
+                      className="text-sm font-medium"
+                    >
+                      Preferred Intake
+                    </Label>
+                    <Select
+                      value={editingLead.preferredIntake || ""}
+                      onValueChange={(val) =>
+                        setEditingLead({
+                          ...editingLead,
+                          preferredIntake: val,
+                        })
+                      }
+                    >
+                      <SelectTrigger
+                        id="edit-intake"
+                        className="w-full bg-white h-11 border-slate-200 rounded-xl"
+                      >
+                        <SelectValue placeholder="Select Intake" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Spring 2026">Spring 2026</SelectItem>
+                        <SelectItem value="Fall 2026">Fall 2026</SelectItem>
+                        <SelectItem value="SEP 2026 INTAKE">
+                          SEP 2026 INTAKE
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Lead Source */}
+                  <div className="grid gap-1.5 sm:col-span-2">
+                    <Label
+                      htmlFor="edit-source"
+                      className="text-sm font-medium"
+                    >
+                      Lead Source
+                    </Label>
+                    <Select
+                      value={editingLead.source || ""}
+                      onValueChange={(val) =>
+                        setEditingLead({
+                          ...editingLead,
+                          source: val,
+                        })
+                      }
+                    >
+                      <SelectTrigger
+                        id="edit-source"
+                        className="w-full bg-white h-11 border-slate-200 rounded-xl"
+                      >
+                        <SelectValue placeholder="Select Lead Source" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Walk-In">Walk-In</SelectItem>
+                        <SelectItem value="Online">
+                          Online Advertisement
+                        </SelectItem>
+                        <SelectItem value="Referral">Referral</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Next Followup Date */}
+                  <div className="grid gap-1.5 sm:col-span-2">
                     <Label
                       htmlFor="edit-followup"
                       className="text-sm font-medium"
@@ -428,7 +740,8 @@ export default function PageActions(props: PageActionsProps) {
                     />
                   </div>
 
-                  <div className="grid gap-1.5">
+                  {/* Management Remarks */}
+                  <div className="grid gap-1.5 sm:col-span-2">
                     <Label
                       htmlFor="edit-remarks"
                       className="text-sm font-medium"
@@ -469,7 +782,7 @@ export default function PageActions(props: PageActionsProps) {
         </SheetContent>
       </Sheet>
 
-      {/* 3. HARD CONFIRMATION DELETION ALTER_DIALOG */}
+      {/* 3. HARD CONFIRMATION DELETION ALERT_DIALOG */}
       <AlertDialog
         open={!!leadIdToDelete}
         onOpenChange={(value) => !value && setLeadIdToDelete(null)}

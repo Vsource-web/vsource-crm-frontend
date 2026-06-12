@@ -31,17 +31,17 @@ import { useState } from "react";
 import Image from "next/image";
 
 const items = [
-  { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  // { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   {
     to: "/leads",
     label: "Leads",
     icon: Users,
     children: [
-      { to: "/leads/all", label: "All Leads" },
-      { to: "/leads/allocated", label: "Allocated" },
-      { to: "/leads/today-followup", label: "Today Follow-up" },
-      { to: "/leads/all-followup", label: "All Follow-ups" },
       { to: "/leads/add", label: "Add Lead" },
+      { to: "/leads/all", label: "All Leads" },
+      // { to: "/leads/allocated", label: "Allocated" },
+      // { to: "/leads/today-followup", label: "Today Follow-up" },
+      // { to: "/leads/all-followup", label: "All Follow-ups" },
     ],
   },
   // { to: "/course-finder", label: "Course Finder", icon: GraduationCap },
@@ -53,10 +53,10 @@ const items = [
   // { to: "/reports", label: "Reports", icon: BarChart3 },
   // { to: "/promotional", label: "Promotional", icon: Megaphone },
   // { to: "/users", label: "User Management", icon: UserCog },
-  { to: "/roles", label: "Roles & Permissions", icon: ShieldCheck },
+  // { to: "/roles", label: "Roles & Permissions", icon: ShieldCheck },
   { to: "/master-settings", label: "Master Settings", icon: Settings2 },
   { to: "/branches", label: "Branches", icon: MapPin },
-  { to: "/profile", label: "Profile", icon: User },
+  // { to: "/profile", label: "Profile", icon: User },
 ] as const;
 
 export function Sidebar() {

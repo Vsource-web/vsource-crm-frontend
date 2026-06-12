@@ -46,20 +46,73 @@ const statusTabs: Array<LeadStatus | "all"> = [
   "converted",
   "lost",
 ];
-
 interface LeadRecord {
   id: string;
   leadNumber: string;
+
+  counsellingDate?: string | null;
+
   studentName?: string;
   mobileNumber?: string;
   emailId?: string;
+
+  place?: string;
+  passport?: string;
+
   source?: string;
-  branch?: string;
+
+  branch?: {
+    id: string;
+    name: string;
+  };
+
+  assignedCounselor?: {
+    id: string;
+    name: string;
+  };
+
+  assignedCounselorId?: string;
+
   preferredCountry?: string;
-  assignedCounselor?: string;
+  preferredIntake?: string;
+  preferredCourse?: string;
+
+  tenthPercentage?: number;
+  tenthYearOfPassing?: number;
+
+  twelfthPercentage?: number;
+  twelfthYearOfPassing?: number;
+
+  bachelorsCourse?: string;
+  bachelorsUniversityName?: string;
+  bachelorsPercentage?: number;
+  bachelorsYearOfPassing?: number;
+
+  backlogs?: number;
+
+  workExperience?: string;
+
+  greGmatScore?: number;
+  quantitativeScore?: number;
+  verbalScore?: number;
+  analyticalWritingScore?: number;
+
+  englishTestType?: string;
+
+  listeningScore?: number;
+  readingScore?: number;
+  writingScore?: number;
+  speakingScore?: number;
+
+  gapsIfAny?: string;
+
   remarks?: string;
+
   nextFollowup?: string | null;
+
   status: LeadStatus;
+
+  isConverted?: boolean;
   createdAt: string;
 }
 
@@ -116,7 +169,7 @@ export default function AllLeadsPage() {
           item.leadNumber?.toLowerCase().includes(q);
 
         const matchStatus = status === "all" || item.status === status;
-        const matchBranch = branch === "all" || item.branch === branch;
+        const matchBranch = branch === "all" || item.branch?.name === branch;
         const matchSource = source === "all" || item.source === source;
 
         return matchQuery && matchStatus && matchBranch && matchSource;
@@ -179,8 +232,10 @@ export default function AllLeadsPage() {
 
     try {
       await fetch(`${API_BASE_URL}/leads/${editingLead.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify(editingLead),
       });
 
@@ -213,14 +268,14 @@ export default function AllLeadsPage() {
         description="Manage every enquiry in the CRM with search, filters, export and status-driven navigation."
         actions={
           <div className="flex flex-row items-center gap-2">
-            <Button
+            {/* <Button
               variant="outline"
               size="sm"
               onClick={() => toast.success("Export started")}
               className="whitespace-nowrap"
             >
               <Download className="size-4 mr-2" /> Export
-            </Button>
+            </Button> */}
             <Button
               size="sm"
               onClick={() => router.push("/leads/add")}
@@ -393,24 +448,62 @@ export default function AllLeadsPage() {
                         </p>
                       </div>
 
-                      <div className="grid grid-cols-2 gap-x-2 gap-y-3 pt-2 border-t border-border/60 text-xs text-muted-foreground">
+                      <div className="grid grid-cols-2 gap-3 pt-2 border-t border-border/60 text-xs">
                         <div>
-                          <span className="font-medium text-foreground block text-[10px] uppercase tracking-wider text-muted-foreground/80 mb-0.5">
+                          <p className="text-muted-foreground uppercase text-[10px]">
                             Source
-                          </span>
-                          {lead.source || "—"}
+                          </p>
+                          <p>{lead.source || "—"}</p>
                         </div>
+
                         <div>
-                          <span className="font-medium text-foreground block text-[10px] uppercase tracking-wider text-muted-foreground/80 mb-0.5">
+                          <p className="text-muted-foreground uppercase text-[10px]">
                             Country
-                          </span>
-                          {lead.preferredCountry || "—"}
+                          </p>
+                          <p>{lead.preferredCountry || "—"}</p>
                         </div>
-                        <div className="col-span-2">
-                          <span className="font-medium text-foreground block text-[10px] uppercase tracking-wider text-muted-foreground/80 mb-0.5">
+
+                        <div>
+                          <p className="text-muted-foreground uppercase text-[10px]">
                             Branch
-                          </span>
-                          {lead.branch || "—"}
+                          </p>
+                          <p>{lead.branch?.name || "—"}</p>
+                        </div>
+
+                        <div>
+                          <p className="text-muted-foreground uppercase text-[10px]">
+                            Counselor
+                          </p>
+                          <p>{lead.assignedCounselor || "—"}</p>
+                        </div>
+
+                        <div className="col-span-2">
+                          <p className="text-muted-foreground uppercase text-[10px]">
+                            Email
+                          </p>
+                          <p className="break-all">{lead.emailId || "—"}</p>
+                        </div>
+
+                        <div>
+                          <p className="text-muted-foreground uppercase text-[10px]">
+                            Created Date
+                          </p>
+                          <p>
+                            {lead.createdAt
+                              ? new Date(lead.createdAt).toLocaleDateString()
+                              : "—"}
+                          </p>
+                        </div>
+
+                        <div>
+                          <p className="text-muted-foreground uppercase text-[10px]">
+                            Next Followup
+                          </p>
+                          <p>
+                            {lead.nextFollowup
+                              ? new Date(lead.nextFollowup).toLocaleDateString()
+                              : "—"}
+                          </p>
                         </div>
                       </div>
 
@@ -459,16 +552,16 @@ export default function AllLeadsPage() {
                       <th className="px-4 py-3.5 align-middle font-semibold">
                         Mobile
                       </th>
-                      <th className="px-4 py-3.5 align-middle font-semibold hidden lg:table-cell">
+                      <th className="px-4 py-3.5 align-middle font-semibold">
                         Email
                       </th>
                       <th className="px-4 py-3.5 align-middle font-semibold">
                         Source
                       </th>
-                      <th className="px-4 py-3.5 align-middle font-semibold hidden lg:table-cell">
+                      <th className="px-4 py-3.5 align-middle font-semibold">
                         Branch
                       </th>
-                      <th className="px-4 py-3.5 align-middle font-semibold hidden xl:table-cell">
+                      <th className="px-4 py-3.5 align-middle font-semibold">
                         Counselor
                       </th>
                       <th className="px-4 py-3.5 align-middle font-semibold">
@@ -477,10 +570,10 @@ export default function AllLeadsPage() {
                       <th className="px-4 py-3.5 align-middle font-semibold">
                         Status
                       </th>
-                      <th className="px-4 py-3.5 align-middle font-semibold hidden xl:table-cell">
+                      <th className="px-4 py-3.5 align-middle font-semibold">
                         Created Date
                       </th>
-                      <th className="px-4 py-3.5 align-middle font-semibold hidden xl:table-cell">
+                      <th className="px-4 py-3.5 align-middle font-semibold">
                         Next Followup
                       </th>
                       <th className="px-4 py-3.5 align-middle text-right font-semibold">
@@ -513,16 +606,16 @@ export default function AllLeadsPage() {
                           <td className="px-4 py-3.5 align-middle whitespace-nowrap">
                             {lead.mobileNumber || "—"}
                           </td>
-                          <td className="px-4 py-3.5 align-middle hidden lg:table-cell text-muted-foreground max-w-[180px] truncate">
+                          <td className="px-4 py-3.5 align-middle  text-muted-foreground max-w-[180px] truncate">
                             {lead.emailId || "—"}
                           </td>
                           <td className="px-4 py-3.5 align-middle max-w-[120px] truncate">
                             {lead.source || "—"}
                           </td>
-                          <td className="px-4 py-3.5 align-middle hidden lg:table-cell max-w-[150px] truncate">
-                            {lead.branch || "—"}
+                          <td className="px-4 py-3.5 align-middle max-w-[150px] truncate">
+                            {lead.branch?.name || "—"}
                           </td>
-                          <td className="px-4 py-3.5 align-middle hidden xl:table-cell whitespace-nowrap">
+                          <td className="px-4 py-3.5 align-middle whitespace-nowrap">
                             {lead.assignedCounselor || "—"}
                           </td>
                           <td className="px-4 py-3.5 align-middle whitespace-nowrap">
@@ -538,12 +631,12 @@ export default function AllLeadsPage() {
                               {lead.status}
                             </Badge>
                           </td>
-                          <td className="px-4 py-3.5 align-middle hidden xl:table-cell text-muted-foreground whitespace-nowrap">
+                          <td className="px-4 py-3.5 align-middle  text-muted-foreground whitespace-nowrap">
                             {lead.createdAt
                               ? new Date(lead.createdAt).toLocaleDateString()
                               : "—"}
                           </td>
-                          <td className="px-4 py-3.5 align-middle hidden xl:table-cell whitespace-nowrap">
+                          <td className="px-4 py-3.5 align-middle whitespace-nowrap">
                             {lead.nextFollowup
                               ? new Date(lead.nextFollowup).toLocaleDateString()
                               : "—"}
