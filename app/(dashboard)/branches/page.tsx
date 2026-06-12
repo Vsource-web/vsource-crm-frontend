@@ -25,7 +25,6 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
-
 import { PageHeader, PageTransition } from "@/components/common/PageHeader";
 
 import { Card, CardContent } from "@/components/ui/card";
@@ -103,7 +102,23 @@ export default function BranchesPage() {
 
   const resetForm = () => {
     setEditingBranch(null);
+
     setBranchName("");
+    setBranchCode("");
+
+    setCity("");
+    setAddress("");
+
+    setEmail("");
+    setPhone("");
+
+    setState("");
+    setCountry("India");
+
+    setPincode("");
+
+    setIsActive(true);
+
     setOpen(false);
   };
 
@@ -118,7 +133,16 @@ export default function BranchesPage() {
         await updateBranch(editingBranch.id, {
           name: branchName,
           code: branchCode,
+
+          email,
+          phone,
+
           city,
+          state,
+
+          country,
+          pincode,
+
           address,
         });
 
@@ -127,7 +151,16 @@ export default function BranchesPage() {
         await createBranch({
           name: branchName,
           code: branchCode,
+
+          email,
+          phone,
+
           city,
+          state,
+
+          country,
+          pincode,
+
           address,
         });
 
@@ -144,7 +177,21 @@ export default function BranchesPage() {
 
   const handleEdit = (branch: Branch) => {
     setEditingBranch(branch);
+
     setBranchName(branch.name);
+    setBranchCode(branch.code);
+
+    setEmail(branch.email ?? "");
+    setPhone(branch.phone ?? "");
+
+    setCity(branch.city ?? "");
+    setState(branch.state ?? "");
+
+    setCountry(branch.country ?? "");
+    setPincode(branch.pincode ?? "");
+
+    setAddress(branch.address ?? "");
+
     setOpen(true);
   };
 
@@ -169,8 +216,10 @@ export default function BranchesPage() {
           actions={
             <Button
               onClick={() => {
+                resetForm();
+
                 setEditingBranch(null);
-                setBranchName("");
+
                 setOpen(true);
               }}
             >
@@ -271,7 +320,7 @@ export default function BranchesPage() {
                 />
               </div>
 
-              <div className="flex items-center gap-3 md:col-span-2">
+              {/* <div className="flex items-center gap-3 md:col-span-2">
                 <input
                   type="checkbox"
                   checked={isActive}
@@ -280,7 +329,7 @@ export default function BranchesPage() {
                 />
 
                 <Label>Active Branch</Label>
-              </div>
+              </div> */}
             </div>
 
             <DialogFooter>

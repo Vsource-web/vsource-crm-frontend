@@ -8,8 +8,18 @@ export interface Branch {
   id: string;
   name: string;
   code: string;
+
+  email?: string;
+  phone?: string;
+
   city?: string;
+  state?: string;
+
+  country?: string;
+  pincode?: string;
+
   address?: string;
+  status?: boolean;
 
   usersCount: number;
   leadsCount: number;
@@ -21,7 +31,16 @@ export interface Branch {
 export interface CreateBranchDto {
   name: string;
   code: string;
+
+  email?: string;
+  phone?: string;
+
   city?: string;
+  state?: string;
+
+  country?: string;
+  pincode?: string;
+
   address?: string;
 }
 

@@ -43,6 +43,16 @@ const categories = [
     label: "Lead Sources",
     endpoint: "/lead-sources",
   },
+  {
+    key: "lead-degrees",
+    label: "Lead Degrees",
+    endpoint: "/lead-degrees",
+  },
+  {
+    key: "lead-universities",
+    label: "Lead Universities",
+    endpoint: "/lead-universities",
+  },
 ];
 
 export default function MasterSettings() {
@@ -106,25 +116,31 @@ export default function MasterSettings() {
       <div className="space-y-6">
         <PageHeader
           title="Master Settings"
-          description="Manage Countries, Intakes and Lead Sources"
+          description="Manage Countries, Intakes, Lead Sources, Lead Degrees and Lead Universities"
         />
 
         <Card>
           <CardContent className="space-y-6 p-6">
-            <Tabs
-              value={selected}
-              onValueChange={(value) =>
-                setSelected(value as (typeof categories)[number]["key"])
-              }
-            >
-              <TabsList className="grid w-full grid-cols-3 max-w-xl">
-                {categories.map((item) => (
-                  <TabsTrigger key={item.key} value={item.key}>
-                    {item.label}
-                  </TabsTrigger>
-                ))}
-              </TabsList>
-            </Tabs>
+            <div className="overflow-x-auto">
+              <Tabs
+                value={selected}
+                onValueChange={(value) =>
+                  setSelected(value as (typeof categories)[number]["key"])
+                }
+              >
+                <TabsList className="inline-flex min-w-max">
+                  {categories.map((item) => (
+                    <TabsTrigger
+                      key={item.key}
+                      value={item.key}
+                      className="px-6 whitespace-nowrap"
+                    >
+                      {item.label}
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
+              </Tabs>
+            </div>
 
             <div className="flex flex-col gap-3 sm:flex-row">
               <Input
