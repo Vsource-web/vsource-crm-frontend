@@ -43,10 +43,13 @@ import {
   getIntakes,
   getLeadSources,
 } from "@/lib/master-settings";
+import { useQuery } from "@tanstack/react-query";
+import axios from "axios";
 
 const leadFormSchema = z.object({
   counsellingDate: z.string().optional(),
   studentName: z.string().min(1, "Student name is required"),
+  fatherName: z.string().optional(),
   mobileNumber: z
     .string()
     .min(10, "Must be at least 10 digits")
@@ -58,6 +61,7 @@ const leadFormSchema = z.object({
     .email("Invalid email address"),
   place: z.string().optional(),
   passport: z.string().optional(),
+  passportExpireDate: z.string().optional(),
   tenthPercentage: z.number().optional(),
   tenthYearOfPassing: z.number().optional(),
   twelfthPercentage: z.number().optional(),
@@ -96,6 +100,33 @@ export default function AddLeadPage() {
   const [countries, setCountries] = useState<Country[]>([]);
   const [intakes, setIntakes] = useState<Intake[]>([]);
   const [leadSources, setLeadSources] = useState<LeadSource[]>([]);
+
+  const { data: universities = [], isLoading: universitiesLoad } = useQuery({
+    queryKey: ["universities"],
+    queryFn: async () => {
+      const { data } = await axios.get(
+        `${process.env.NEXT_PUBLIC_API_URL}/lead-universities`,
+        {
+          withCredentials: true,
+        },
+      );
+      return data || [];
+    },
+  });
+
+  const { data: courses = [], isLoading: coursesLoad } = useQuery({
+    queryKey: ["courses"],
+    queryFn: async () => {
+      const { data } = await axios.get(
+        `${process.env.NEXT_PUBLIC_API_URL}/lead-degrees`,
+        {
+          withCredentials: true,
+        },
+      );
+      return data || [];
+    },
+  });
+
   const {
     register,
     control,
@@ -206,6 +237,40 @@ export default function AddLeadPage() {
               <AccordionContent className="p-6">
                 <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
                   <div className="space-y-2">
+                    <Label className="after:content-['*'] after:ml-0.5 after:text-red-500">
+                      Branch
+                    </Label>
+
+                    <Controller
+                      control={control}
+                      name="branchId"
+                      render={({ field }) => (
+                        <Select
+                          value={field.value}
+                          onValueChange={field.onChange}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select Branch" />
+                          </SelectTrigger>
+
+                          <SelectContent>
+                            {branches.map((branch) => (
+                              <SelectItem key={branch.id} value={branch.id}>
+                                {branch.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      )}
+                    />
+
+                    {errors.branchId && (
+                      <p className="text-sm font-medium text-destructive">
+                        {errors.branchId.message}
+                      </p>
+                    )}
+                  </div>
+                  <div className="space-y-2">
                     <Label htmlFor="counsellingDate">Counselling Date</Label>
                     <Input
                       id="counsellingDate"
@@ -231,6 +296,15 @@ export default function AddLeadPage() {
                         {errors.studentName.message}
                       </p>
                     )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="fatherName">Father Name</Label>
+                    <Input
+                      id="fatherName"
+                      placeholder="ex: Venkatesh"
+                      {...register("fatherName")}
+                    />
                   </div>
 
                   <div className="space-y-2">
@@ -299,6 +373,17 @@ export default function AddLeadPage() {
                     />
                   </div>
                   <div className="space-y-2">
+                    <Label htmlFor="passportExpireDate">
+                      Passport Expiry Date
+                    </Label>
+
+                    <Input
+                      id="passportExpireDate"
+                      type="date"
+                      {...register("passportExpireDate")}
+                    />
+                  </div>
+                  <div className="space-y-2">
                     <Label>Lead Source</Label>
                     <Controller
                       control={control}
@@ -322,40 +407,6 @@ export default function AddLeadPage() {
                         </Select>
                       )}
                     />
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="after:content-['*'] after:ml-0.5 after:text-red-500">
-                      Branch
-                    </Label>
-
-                    <Controller
-                      control={control}
-                      name="branchId"
-                      render={({ field }) => (
-                        <Select
-                          value={field.value}
-                          onValueChange={field.onChange}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select Branch" />
-                          </SelectTrigger>
-
-                          <SelectContent>
-                            {branches.map((branch) => (
-                              <SelectItem key={branch.id} value={branch.id}>
-                                {branch.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      )}
-                    />
-
-                    {errors.branchId && (
-                      <p className="text-sm font-medium text-destructive">
-                        {errors.branchId.message}
-                      </p>
-                    )}
                   </div>
                 </div>
               </AccordionContent>
@@ -429,16 +480,83 @@ export default function AddLeadPage() {
                 <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
                   <div className="space-y-2 lg:col-span-2">
                     <Label>University / College Name</Label>
-                    <Input
-                      placeholder="Enter institution name"
-                      {...register("bachelorsUniversityName")}
+                    <Controller
+                      control={control}
+                      name="bachelorsUniversityName"
+                      render={({ field }) => (
+                        <Select
+                          value={field.value}
+                          onValueChange={(value) => {
+                            field.onChange(value);
+                            // load courses for selected university
+                          }}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select University" />
+                          </SelectTrigger>
+
+                          <SelectContent>
+                            {universitiesLoad ? (
+                              <SelectItem value="loading" disabled>
+                                loading universities...
+                              </SelectItem>
+                            ) : (
+                              universities.map(
+                                (
+                                  uni: { id: string; name: string },
+                                  idx: number,
+                                ) => (
+                                  <SelectItem
+                                    key={uni.id || idx}
+                                    value={uni.name}
+                                  >
+                                    {uni.name}
+                                  </SelectItem>
+                                ),
+                              )
+                            )}
+                          </SelectContent>
+                        </Select>
+                      )}
                     />
                   </div>
                   <div className="space-y-2">
                     <Label>Course / Major</Label>
-                    <Input
-                      placeholder="e.g. B.Tech Computer Science"
-                      {...register("bachelorsCourse")}
+                    <Controller
+                      control={control}
+                      name="bachelorsCourse"
+                      render={({ field }) => (
+                        <Select
+                          value={field.value}
+                          onValueChange={field.onChange}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select Course" />
+                          </SelectTrigger>
+
+                          <SelectContent>
+                            {coursesLoad ? (
+                              <SelectItem value="loading" disabled>
+                                loading courses...
+                              </SelectItem>
+                            ) : (
+                              courses.map(
+                                (
+                                  course: { id: string; name: string },
+                                  idx: number,
+                                ) => (
+                                  <SelectItem
+                                    key={course.id || idx}
+                                    value={course.name}
+                                  >
+                                    {course.name}
+                                  </SelectItem>
+                                ),
+                              )
+                            )}
+                          </SelectContent>
+                        </Select>
+                      )}
                     />
                   </div>
                   <div className="space-y-2">
@@ -482,7 +600,7 @@ export default function AddLeadPage() {
                 </div>
               </AccordionContent>
             </AccordionItem>
-            {/* Section 3: Test Scores */}
+            {/* Section 3: EPT Details */}
             <AccordionItem
               value="scores"
               className="rounded-2xl border bg-card"
@@ -491,7 +609,7 @@ export default function AddLeadPage() {
                 <div className=" px-6 py-4 ">
                   <h3 className="flex items-center text-lg font-semibold text-foreground">
                     <BookOpen className="mr-2 h-5 w-5 text-purple-500" />
-                    Test Scores
+                    EPT Details
                   </h3>
                 </div>
               </AccordionTrigger>

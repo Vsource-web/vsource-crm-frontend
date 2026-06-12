@@ -42,7 +42,7 @@ export default function LoginPage() {
     setLoading(false);
     if (res.ok) {
       toast.success("Welcome back");
-      router.push("/dashboard");
+      router.push("/leads/add");
     } else {
       toast.error(res.error ?? "Login failed");
     }

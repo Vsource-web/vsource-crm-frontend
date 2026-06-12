@@ -59,6 +59,8 @@ interface LeadRecord {
   place?: string;
   passport?: string;
 
+  passportExpireDate?: string | null;
+
   source?: string;
 
   branch?: {

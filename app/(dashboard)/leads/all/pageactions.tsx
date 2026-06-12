@@ -34,6 +34,8 @@ import {
 import { Branch, getBranches } from "@/lib/branches";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { useQuery } from "@tanstack/react-query";
+import axios from "axios";
 
 interface LeadRecord {
   id: string;
@@ -42,11 +44,14 @@ interface LeadRecord {
   counsellingDate?: string | null;
 
   studentName?: string;
+  fatherName?: string;
   mobileNumber?: string;
   emailId?: string;
 
   place?: string;
   passport?: string;
+
+  passportExpireDate?: string | null;
 
   source?: string;
 
@@ -114,21 +119,6 @@ interface PageActionsProps {
 
   branchOptions: string[];
   statusStyle: Record<LeadStatus, string>;
-
-  countries: {
-    id: string;
-    name: string;
-  }[];
-
-  intakes: {
-    id: string;
-    name: string;
-  }[];
-
-  leadSources: {
-    id: string;
-    name: string;
-  }[];
 }
 
 export default function PageActions(props: PageActionsProps) {
@@ -143,11 +133,46 @@ export default function PageActions(props: PageActionsProps) {
     executeDeleteLead,
     branchOptions,
     statusStyle,
-    countries,
-    intakes,
-    leadSources,
   } = props;
+
   const [branches, setBranches] = useState<Branch[]>([]);
+
+  const { data: intakes, isLoading: intakeLoad } = useQuery({
+    queryKey: ["intake"],
+    queryFn: async () => {
+      const { data } = await axios.get(
+        `${process.env.NEXT_PUBLIC_API_URL}/intakes`,
+        {
+          withCredentials: true,
+        },
+      );
+      return data || [];
+    },
+  });
+  const { data: countries, isLoading: countryLoad } = useQuery({
+    queryKey: ["countries"],
+    queryFn: async () => {
+      const { data } = await axios.get(
+        `${process.env.NEXT_PUBLIC_API_URL}/countries`,
+        {
+          withCredentials: true,
+        },
+      );
+      return data || [];
+    },
+  });
+  const { data: lead_sources, isLoading: lead_sourcesLoad } = useQuery({
+    queryKey: ["lead-sources"],
+    queryFn: async () => {
+      const { data } = await axios.get(
+        `${process.env.NEXT_PUBLIC_API_URL}/lead-sources`,
+        {
+          withCredentials: true,
+        },
+      );
+      return data || [];
+    },
+  });
 
   useEffect(() => {
     const loadBranches = async () => {
@@ -162,6 +187,11 @@ export default function PageActions(props: PageActionsProps) {
 
     loadBranches();
   }, []);
+
+  useEffect(() => {
+    console.log("editingLead", editingLead?.preferredCountry);
+    console.log("editingLead", editingLead?.preferredIntake);
+  }, [editingLead]);
 
   function DetailItem({
     label,
@@ -228,6 +258,10 @@ export default function PageActions(props: PageActionsProps) {
                     <DetailItem
                       label="Student Name"
                       value={selected.studentName}
+                    />
+                    <DetailItem
+                      label="Father Name"
+                      value={selected.fatherName}
                     />
                     <DetailItem
                       label="Mobile Number"
@@ -297,10 +331,10 @@ export default function PageActions(props: PageActionsProps) {
                   </div>
                 </div>
 
-                {/* TEST SCORES */}
+                {/* EPT Details */}
                 <div className="rounded-xl border bg-card">
                   <div className="border-b px-5 py-3">
-                    <h3 className="font-semibold text-lg">Test Scores</h3>
+                    <h3 className="font-semibold text-lg">EPT Details</h3>
                   </div>
                   <div className="grid grid-cols-1 gap-4 p-5 md:grid-cols-2 lg:grid-cols-3">
                     <DetailItem
@@ -439,6 +473,22 @@ export default function PageActions(props: PageActionsProps) {
                       }
                     />
                   </div>
+                  <div className="grid gap-1.5 sm:col-span-2">
+                    <Label htmlFor="edit-name" className="text-sm font-medium">
+                      Father Name
+                    </Label>
+                    <Input
+                      id="edit-name"
+                      className="bg-background"
+                      value={editingLead.fatherName || ""}
+                      onChange={(e) =>
+                        setEditingLead({
+                          ...editingLead,
+                          fatherName: e.target.value,
+                        })
+                      }
+                    />
+                  </div>
 
                   {/* Mobile Number */}
                   <div className="grid gap-1.5">
@@ -514,6 +564,30 @@ export default function PageActions(props: PageActionsProps) {
                         setEditingLead({
                           ...editingLead,
                           passport: e.target.value,
+                        })
+                      }
+                    />
+                  </div>
+
+                  <div className="grid gap-1.5">
+                    <Label htmlFor="edit-passport-expiry">
+                      Passport Expiry Date
+                    </Label>
+
+                    <Input
+                      id="edit-passport-expiry"
+                      type="date"
+                      value={
+                        editingLead.passportExpireDate
+                          ? new Date(editingLead.passportExpireDate)
+                              .toISOString()
+                              .split("T")[0]
+                          : ""
+                      }
+                      onChange={(e) =>
+                        setEditingLead({
+                          ...editingLead,
+                          passportExpireDate: e.target.value || null,
                         })
                       }
                     />
@@ -635,16 +709,27 @@ export default function PageActions(props: PageActionsProps) {
                       >
                         <SelectValue placeholder="Select Country" />
                       </SelectTrigger>
-                     <SelectContent>
-  {intakes.map((intake) => (
-    <SelectItem
-      key={intake.id}
-      value={intake.name}
-    >
-      {intake.name}
-    </SelectItem>
-  ))}
-</SelectContent>
+                      <SelectContent>
+                        {countryLoad ? (
+                          <SelectItem value="loading" disabled>
+                            Loading countries...
+                          </SelectItem>
+                        ) : (
+                          (countries || []).map(
+                            (
+                              country: { id: string; name: string },
+                              idx: number,
+                            ) => (
+                              <SelectItem
+                                key={country.id || idx}
+                                value={country.name}
+                              >
+                                {country.name}
+                              </SelectItem>
+                            ),
+                          )
+                        )}
+                      </SelectContent>
                     </Select>
                   </div>
 
@@ -672,11 +757,19 @@ export default function PageActions(props: PageActionsProps) {
                         <SelectValue placeholder="Select Intake" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="Spring 2026">Spring 2026</SelectItem>
-                        <SelectItem value="Fall 2026">Fall 2026</SelectItem>
-                        <SelectItem value="SEP 2026 INTAKE">
-                          SEP 2026 INTAKE
-                        </SelectItem>
+                        {intakeLoad ? (
+                          <SelectItem value="loading" disabled>
+                            loading intakes...
+                          </SelectItem>
+                        ) : (
+                          (intakes || []).map(
+                            (intake: { id: string; name: string }) => (
+                              <SelectItem key={intake.id} value={intake.name}>
+                                {intake.name}
+                              </SelectItem>
+                            ),
+                          )
+                        )}
                       </SelectContent>
                     </Select>
                   </div>
@@ -705,11 +798,25 @@ export default function PageActions(props: PageActionsProps) {
                         <SelectValue placeholder="Select Lead Source" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="Walk-In">Walk-In</SelectItem>
-                        <SelectItem value="Online">
-                          Online Advertisement
-                        </SelectItem>
-                        <SelectItem value="Referral">Referral</SelectItem>
+                        {lead_sourcesLoad ? (
+                          <SelectItem value="loading" disabled>
+                            loading lead source...
+                          </SelectItem>
+                        ) : (
+                          (lead_sources || []).map(
+                            (
+                              lead_source: { id: string; name: string },
+                              idx: number,
+                            ) => (
+                              <SelectItem
+                                key={lead_source.id || idx}
+                                value={lead_source.name}
+                              >
+                                {lead_source.name}
+                              </SelectItem>
+                            ),
+                          )
+                        )}
                       </SelectContent>
                     </Select>
                   </div>

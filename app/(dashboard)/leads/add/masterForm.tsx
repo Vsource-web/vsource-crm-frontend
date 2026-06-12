@@ -39,6 +39,7 @@ import {
 const leadFormSchema = z.object({
   counsellingDate: z.string().optional(),
   studentName: z.string().min(1, "Student name is required"),
+  fatherName: z.string().optional(),
   mobileNumber: z
     .string()
     .min(10, "Must be at least 10 digits")
@@ -204,6 +205,40 @@ export default function AddLeadPage() {
               <AccordionContent className="p-6">
                 <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
                   <div className="space-y-2">
+                    <Label className="after:content-['*'] after:ml-0.5 after:text-red-500">
+                      Branch
+                    </Label>
+
+                    <Controller
+                      control={control}
+                      name="branchId"
+                      render={({ field }) => (
+                        <Select
+                          value={field.value}
+                          onValueChange={field.onChange}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select Branch" />
+                          </SelectTrigger>
+
+                          <SelectContent>
+                            {branches.map((branch) => (
+                              <SelectItem key={branch.id} value={branch.id}>
+                                {branch.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      )}
+                    />
+
+                    {errors.branchId && (
+                      <p className="text-sm font-medium text-destructive">
+                        {errors.branchId.message}
+                      </p>
+                    )}
+                  </div>
+                  <div className="space-y-2">
                     <Label htmlFor="counsellingDate">Counselling Date</Label>
                     <Input
                       id="counsellingDate"
@@ -229,6 +264,20 @@ export default function AddLeadPage() {
                         {errors.studentName.message}
                       </p>
                     )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label
+                      htmlFor="fatherName"
+                      className="after:content-['*'] after:ml-0.5 after:text-red-500"
+                    >
+                      Father Name
+                    </Label>
+                    <Input
+                      id="fatherName"
+                      placeholder="ex: Venkatesh"
+                      {...register("fatherName")}
+                    />
                   </div>
 
                   <div className="space-y-2">
@@ -320,40 +369,6 @@ export default function AddLeadPage() {
                         </Select>
                       )}
                     />
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="after:content-['*'] after:ml-0.5 after:text-red-500">
-                      Branch
-                    </Label>
-
-                    <Controller
-                      control={control}
-                      name="branchId"
-                      render={({ field }) => (
-                        <Select
-                          value={field.value}
-                          onValueChange={field.onChange}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select Branch" />
-                          </SelectTrigger>
-
-                          <SelectContent>
-                            {branches.map((branch) => (
-                              <SelectItem key={branch.id} value={branch.id}>
-                                {branch.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      )}
-                    />
-
-                    {errors.branchId && (
-                      <p className="text-sm font-medium text-destructive">
-                        {errors.branchId.message}
-                      </p>
-                    )}
                   </div>
                 </div>
               </AccordionContent>
@@ -480,7 +495,7 @@ export default function AddLeadPage() {
                 </div>
               </AccordionContent>
             </AccordionItem>
-            {/* Section 3: Test Scores */}
+            {/* Section 3: EPT Details */}
             <AccordionItem
               value="scores"
               className="rounded-2xl border bg-card"
@@ -489,7 +504,7 @@ export default function AddLeadPage() {
                 <div className=" px-6 py-4 ">
                   <h3 className="flex items-center text-lg font-semibold text-foreground">
                     <BookOpen className="mr-2 h-5 w-5 text-purple-500" />
-                    Test Scores
+                    EPT Details
                   </h3>
                 </div>
               </AccordionTrigger>
