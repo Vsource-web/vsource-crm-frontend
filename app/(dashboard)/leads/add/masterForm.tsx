@@ -151,7 +151,7 @@ export default function AddLeadPage() {
   }, []);
   const onSubmit = async (values: LeadFormValues, continueFlow = false) => {
     try {
-      const response = await fetch("http://localhost:4000/leads", {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/leads`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
