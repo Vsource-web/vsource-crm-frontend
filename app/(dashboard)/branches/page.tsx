@@ -40,6 +40,7 @@ import { Label } from "@/components/ui/label";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -235,6 +236,7 @@ export default function BranchesPage() {
               <DialogTitle>
                 {editingBranch ? "Edit Branch" : "Create Branch"}
               </DialogTitle>
+              <DialogDescription>Enter lead details.</DialogDescription>
             </DialogHeader>
 
             <div className="grid gap-4 py-4 md:grid-cols-2">

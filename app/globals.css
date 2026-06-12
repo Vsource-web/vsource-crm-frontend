@@ -1,6 +1,7 @@
 @import "tailwindcss";
 @source "../src";
 @import "tw-animate-css";
+@import "shadcn/tailwind.css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -85,9 +86,18 @@
   --sidebar-accent-foreground: oklch(0.45 0.2 27);
   --sidebar-border: oklch(0.92 0.006 264);
   --sidebar-ring: oklch(0.58 0.22 27);
-  --gradient-primary: linear-gradient(135deg, oklch(0.62 0.22 22), oklch(0.5 0.23 28));
-  --gradient-soft: linear-gradient(135deg, oklch(0.98 0.015 27), oklch(0.96 0.025 17));
-  --shadow-soft: 0 1px 2px 0 rgb(15 23 42 / 0.04), 0 1px 3px 0 rgb(15 23 42 / 0.05);
+  --gradient-primary: linear-gradient(
+    135deg,
+    oklch(0.62 0.22 22),
+    oklch(0.5 0.23 28)
+  );
+  --gradient-soft: linear-gradient(
+    135deg,
+    oklch(0.98 0.015 27),
+    oklch(0.96 0.025 17)
+  );
+  --shadow-soft:
+    0 1px 2px 0 rgb(15 23 42 / 0.04), 0 1px 3px 0 rgb(15 23 42 / 0.05);
   --shadow-elevated: 0 10px 30px -12px rgb(220 38 38 / 0.18);
 }
 
@@ -125,7 +135,9 @@
 }
 
 @layer base {
-  * { border-color: var(--color-border); }
+  * {
+    border-color: var(--color-border);
+  }
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
