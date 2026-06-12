@@ -23,6 +23,9 @@ import {
   Sparkles,
   ChevronDown,
   Menu,
+  DoorClosedIcon,
+  PanelLeftInactive,
+  PanelLeftIcon,
 } from "lucide-react";
 import { useUi } from "@/store";
 import { cn } from "@/lib/utils";
@@ -66,9 +69,9 @@ export function Sidebar() {
   // const { sidebarCollapsed, toggleSidebar } = useUi();
 
   const [openMenus, setOpenMenus] = useState<Record<string, boolean>>({
-    leads: false, // default open
+    leads: pathname.startsWith("/leads"),
+    // leads: false, // default open
   });
-
   const toggleMenu = (key: string) => {
     setOpenMenus((prev) => ({
       ...prev,
@@ -86,10 +89,10 @@ export function Sidebar() {
 
       <aside
         className={cn(
-          "fixed md:sticky top-0 left-0 h-screen border-r border-sidebar-border bg-sidebar transition-all duration-300 z-50 flex flex-col",
+          "fixed top-0 left-0 h-screen border-r border-sidebar-border bg-sidebar transition-all duration-300 z-50 flex flex-col",
           sidebarCollapsed
             ? "-translate-x-full md:w-[72px] md:translate-x-0"
-            : "w-[252px] translate-x-0",
+            : "w-[280px] md:w-[252px] translate-x-0",
         )}
       >
         <div className="h-16 flex items-center gap-3 px-4 border-b border-sidebar-border">
@@ -119,7 +122,7 @@ export function Sidebar() {
             onClick={toggleSidebar}
             className="size-7 rounded-md hover:bg-sidebar-accent flex items-center justify-center text-muted-foreground"
           >
-            <ChevronLeft
+            <PanelLeftIcon
               className={cn(
                 "size-4 transition-transform",
                 sidebarCollapsed && "rotate-180",
@@ -128,7 +131,7 @@ export function Sidebar() {
           </button>
         </div>
 
-        <nav className="flex-1 overflow-y-auto px-2 py-3 space-y-0.5">
+        <nav className="flex-1 overflow-y-auto overflow-x-hidden px-2 py-3 space-y-0.5">
           {items.map((it) => {
             const active =
               pathname === it.to || pathname.startsWith(it.to + "/");
