@@ -56,9 +56,9 @@ const items = [
   // { to: "/reports", label: "Reports", icon: BarChart3 },
   // { to: "/promotional", label: "Promotional", icon: Megaphone },
   // { to: "/users", label: "User Management", icon: UserCog },
-  // { to: "/roles", label: "Roles & Permissions", icon: ShieldCheck },
   { to: "/master-settings", label: "Master Settings", icon: Settings2 },
   { to: "/branches", label: "Branches", icon: MapPin },
+  { to: "/roles", label: "Roles & Permissions", icon: ShieldCheck },
   // { to: "/profile", label: "Profile", icon: User },
 ] as const;
 
