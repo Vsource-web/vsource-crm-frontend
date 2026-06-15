@@ -67,10 +67,10 @@ const items = [
   // { to: "/loans", label: "Education Loans", icon: Banknote },
   // { to: "/reports", label: "Reports", icon: BarChart3 },
   // { to: "/promotional", label: "Promotional", icon: Megaphone },
-  // { to: "/users", label: "User Management", icon: UserCog },
   { to: "/master-settings", label: "Master Settings", icon: Settings2 },
   { to: "/branches", label: "Branches", icon: MapPin },
   { to: "/roles", label: "Roles & Permissions", icon: ShieldCheck },
+  { to: "/users", label: "User Management", icon: UserCog },
   // { to: "/profile", label: "Profile", icon: User },
 ] as const;
 
