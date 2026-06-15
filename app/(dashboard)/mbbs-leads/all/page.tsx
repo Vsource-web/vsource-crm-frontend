@@ -362,61 +362,53 @@ export default function AllLeadsPage() {
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-2">
-              <Label className="after:content-['*'] after:ml-0.5 after:text-red-500">
+            <div className="grid gap-1.5">
+              <Label className="text-xs font-semibold tracking-wide text-muted-foreground">
                 Branch
               </Label>
-
-              <Controller
-                control={control}
-                name="branchId"
-                render={({ field }) => (
-                  <Select value={field.value} onValueChange={field.onChange}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select Branch" />
-                    </SelectTrigger>
-
-                    <SelectContent>
-                      {branches.map((branch) => (
-                        <SelectItem key={branch.id} value={branch.id}>
-                          {branch.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                )}
-              />
-
-              {errors.branchId && (
-                <p className="text-sm font-medium text-destructive">
-                  {errors.branchId.message}
-                </p>
-              )}
+              <Select
+                value={branch}
+                onValueChange={(value) => setBranch(value)}
+              >
+                <SelectTrigger className="w-full bg-background">
+                  <SelectValue placeholder="Any branch" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    <SelectLabel>Branch</SelectLabel>
+                    <SelectItem value="all">All Branches</SelectItem>
+                    {branchOptions.map((item) => (
+                      <SelectItem key={item} value={item}>
+                        {item}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
             </div>
             <div className="grid gap-1.5">
-              <Label>Lead Source</Label>
-              <Controller
-                control={control}
-                name="source"
-                render={({ field }) => (
-                  <Select
-                    value={field.value ?? ""}
-                    onValueChange={field.onChange}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select Source" />
-                    </SelectTrigger>
-
-                    <SelectContent>
-                      {leadSources.map((item) => (
-                        <SelectItem key={item.id} value={item.name}>
-                          {item.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                )}
-              />
+              <Label className="text-xs font-semibold tracking-wide text-muted-foreground">
+                Source
+              </Label>
+              <Select
+                value={source}
+                onValueChange={(value) => setSource(value)}
+              >
+                <SelectTrigger className="w-full bg-background">
+                  <SelectValue placeholder="Any source" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    <SelectLabel>Source</SelectLabel>
+                    <SelectItem value="all">Any</SelectItem>
+                    {uniqueSources.map((item) => (
+                      <SelectItem key={item} value={item}>
+                        {item}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
             </div>
           </div>
         </CardContent>

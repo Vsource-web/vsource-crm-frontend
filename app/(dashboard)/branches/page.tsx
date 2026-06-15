@@ -401,7 +401,7 @@ export default function BranchesPage() {
                     <div className="rounded-xl bg-muted/50 p-3 text-center">
                       <FileText className="mx-auto mb-2 h-4 w-4" />
 
-                      <p className="text-lg font-bold">{branch.leadsCount}</p>
+                      <p className="text-lg font-bold">{branch?.leadsCount} </p>
 
                       <p className="text-xs">Leads</p>
                     </div>

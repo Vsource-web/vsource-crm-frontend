@@ -35,6 +35,12 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Branch, getBranches } from "@/lib/branches";
+import {
+  getCountries,
+  getIntakes,
+  getLeadSources,
+  LeadSource,
+} from "@/lib/master-settings";
 
 const API_BASE_URL = "http://localhost:4000";
 
@@ -157,18 +163,6 @@ const eptOptions = [
   "MOI",
   "Not Applicable",
   "Yet to Write",
-];
-
-const sourceOptions = [
-  "Website",
-  "Walk-In",
-  "Facebook",
-  "Instagram",
-  "Google Ads",
-  "Referral",
-  "WhatsApp",
-  "LinkedIn",
-  "Other",
 ];
 
 const getDefaultValues = (): MbbsFormValues => ({
@@ -342,6 +336,8 @@ export default function MbbsForm() {
   const [branches, setBranches] = useState<Branch[]>([]);
   const [countries, setCountries] = useState<DynamicOption[]>([]);
   const [intakes, setIntakes] = useState<DynamicOption[]>([]);
+  const [leadSources, setLeadSources] = useState<LeadSource[]>([]);
+
   const [isCountriesLoading, setIsCountriesLoading] = useState(true);
   const [isIntakesLoading, setIsIntakesLoading] = useState(true);
 
@@ -388,7 +384,40 @@ export default function MbbsForm() {
 
     loadCountries();
   }, []);
+  useEffect(() => {
+    const loadBranches = async () => {
+      try {
+        const data = await getBranches();
 
+        setBranches(data);
+      } catch (error) {
+        console.error(error);
+        toast.error("Failed to load branches");
+      }
+    };
+
+    loadBranches();
+  }, []);
+  useEffect(() => {
+    const loadMasters = async () => {
+      try {
+        const [countryData, intakeData, sourceData] = await Promise.all([
+          getCountries(),
+          getIntakes(),
+          getLeadSources(),
+        ]);
+
+        setCountries(countryData);
+        setIntakes(intakeData);
+        setLeadSources(sourceData);
+      } catch (error) {
+        console.error(error);
+        toast.error("Failed to load master data");
+      }
+    };
+
+    loadMasters();
+  }, []);
   useEffect(() => {
     const loadIntakes = async () => {
       try {
@@ -625,9 +654,9 @@ export default function MbbsForm() {
                           </SelectTrigger>
 
                           <SelectContent>
-                            {sourceOptions.map((item) => (
-                              <SelectItem key={item} value={item}>
-                                {item}
+                            {leadSources.map((item) => (
+                              <SelectItem key={item.id} value={item.name}>
+                                {item.name}
                               </SelectItem>
                             ))}
                           </SelectContent>
@@ -911,18 +940,6 @@ export default function MbbsForm() {
                         </Select>
                       )}
                     />
-                  </div>
-
-                  <div className="space-y-2 md:col-span-2">
-                    <RequiredLabel htmlFor="preferredUniversity">
-                      Preferred University / College
-                    </RequiredLabel>
-                    <Input
-                      id="preferredUniversity"
-                      placeholder="Enter preferred university / college"
-                      {...register("preferredUniversity")}
-                    />
-                    <FormError message={errors.preferredUniversity?.message} />
                   </div>
 
                   <div className="space-y-2">
