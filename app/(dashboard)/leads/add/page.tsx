@@ -226,6 +226,7 @@ export default function AddLeadPage() {
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/leads`, {
         method: "POST",
+        credentials: "include",
         headers: {
           "Content-Type": "application/json",
         },

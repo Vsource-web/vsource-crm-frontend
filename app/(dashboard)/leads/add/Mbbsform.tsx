@@ -430,6 +430,7 @@ export default function MbbsForm() {
       };
       const response = await fetch(`${API_BASE_URL}/mbbs-leads`, {
         method: "POST",
+        credentials: "include",
         headers: {
           "Content-Type": "application/json",
         },

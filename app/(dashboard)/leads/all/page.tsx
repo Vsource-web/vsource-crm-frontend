@@ -191,6 +191,7 @@ export default function AllLeadsPage() {
       setIsLoading(true);
       const response = await fetch(`${API_BASE_URL}/leads`, {
         cache: "no-store",
+        credentials: "include",
       });
       const data = await response.json();
       setLeads(Array.isArray(data) ? data : []);
@@ -212,6 +213,7 @@ export default function AllLeadsPage() {
     try {
       await fetch(`${API_BASE_URL}/leads/${leadIdToDelete}`, {
         method: "DELETE",
+        credentials: "include",
       });
 
       setLeads((current) =>
@@ -235,6 +237,7 @@ export default function AllLeadsPage() {
     try {
       await fetch(`${API_BASE_URL}/leads/${editingLead.id}`, {
         method: "PATCH",
+        credentials: "include",
         headers: {
           "Content-Type": "application/json",
         },

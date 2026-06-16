@@ -10,46 +10,21 @@ import {
   CommandList,
   CommandSeparator,
 } from "@/components/ui/command";
-import { useUi } from "@/store";
-import {
-  LayoutDashboard,
-  Users,
-  GraduationCap,
-  FileText,
-  Building2,
-  BookOpen,
-  Banknote,
-  BarChart3,
-  Megaphone,
-  UserCog,
-  ShieldCheck,
-  Settings2,
-  MapPin,
-  User,
-  Settings,
-} from "lucide-react";
-
-const items = [
-  { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { to: "/leads", label: "Leads", icon: Users },
-  { to: "/students", label: "Students", icon: GraduationCap },
-  { to: "/applications", label: "Applications", icon: FileText },
-  { to: "/universities", label: "Universities", icon: Building2 },
-  { to: "/coaching", label: "Coaching", icon: BookOpen },
-  { to: "/loans", label: "Education Loans", icon: Banknote },
-  { to: "/reports", label: "Reports", icon: BarChart3 },
-  { to: "/promotional", label: "Promotional", icon: Megaphone },
-  { to: "/users", label: "Users", icon: UserCog },
-  { to: "/roles", label: "Roles", icon: ShieldCheck },
-  { to: "/master-settings", label: "Master Settings", icon: Settings2 },
-  { to: "/branches", label: "Branches", icon: MapPin },
-  { to: "/profile", label: "Profile", icon: User },
-  { to: "/settings", label: "Settings", icon: Settings },
-] as const;
+import { useAuth, useUi } from "@/store";
+import { navigationItems } from "@/config/navigation";
 
 export function CommandPalette() {
   const { commandOpen, setCommandOpen } = useUi();
   const router = useRouter();
+
+  const canRead = useAuth((s) => s.canRead);
+  const canCreateLead = useAuth((s) => s.canCreate("MASTER_LEADS"));
+
+  const canCreateMbbs = useAuth((s) => s.canCreate("MBBS_LEADS"));
+
+  const allowedItems = navigationItems.filter((item) =>
+    canRead(item.moduleCode),
+  );
 
   return (
     <CommandDialog open={commandOpen} onOpenChange={setCommandOpen}>
@@ -57,7 +32,7 @@ export function CommandPalette() {
       <CommandList>
         <CommandEmpty>No results found.</CommandEmpty>
         <CommandGroup heading="Navigate">
-          {items.map((it) => {
+          {allowedItems.map((it) => {
             const Icon = it.icon;
             return (
               <CommandItem
@@ -74,22 +49,26 @@ export function CommandPalette() {
         </CommandGroup>
         <CommandSeparator />
         <CommandGroup heading="Quick actions">
-          <CommandItem
-            onSelect={() => {
-              router.push("/leads");
-              setCommandOpen(false);
-            }}
-          >
-            + Add new lead
-          </CommandItem>
-          <CommandItem
-            onSelect={() => {
-              router.push("/students");
-              setCommandOpen(false);
-            }}
-          >
-            + Add new student
-          </CommandItem>
+          {canCreateLead && (
+            <CommandItem
+              onSelect={() => {
+                router.push("/leads/add");
+                setCommandOpen(false);
+              }}
+            >
+              + Add Masters Lead
+            </CommandItem>
+          )}
+          {canCreateMbbs && (
+            <CommandItem
+              onSelect={() => {
+                router.push("/mbbs-leads/add");
+                setCommandOpen(false);
+              }}
+            >
+              + Add MBBS Lead
+            </CommandItem>
+          )}
         </CommandGroup>
       </CommandList>
     </CommandDialog>

@@ -1,3 +1,5 @@
+import { ModuleCode } from "@/store";
+
 export interface ModulePermission {
   moduleId: string;
 
@@ -5,6 +7,12 @@ export interface ModulePermission {
   canRead: boolean;
   canUpdate: boolean;
   canDelete: boolean;
+
+  module: {
+    code: ModuleCode;
+    name: string;
+    sortOrder: number;
+  };
 }
 
 export interface Role {

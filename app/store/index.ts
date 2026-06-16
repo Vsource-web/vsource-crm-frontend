@@ -1,61 +1,157 @@
 // crm-frontend-next\app\store\index.ts
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { authService, type LoginDto } from "@/services/auth.service";
+import { authService } from "@/services/auth.service";
+import { Role } from "@/rbac/types";
+import { hasPermission } from "@/hooks/hasPermission";
 
-export type UserRole = "admin" | "counselor";
+export type ModuleCode =
+  | "MASTER_LEADS"
+  | "MBBS_LEADS"
+  | "BRANCHES"
+  | "MASTER_SETTINGS"
+  | "ROLES"
+  | "USERS";
 
 export interface AuthUser {
   id: string;
   name: string;
   email: string;
-  role: UserRole;
-  avatar?: string;
+  role: Role;
 }
 
 interface AuthState {
   user: AuthUser | null;
   isAuthenticated: boolean;
-  login: (email: string, password: string) => Promise<{ ok: boolean; error?: string }>;
-  logout: () => void;
+  isLoading: boolean;
+
+  hasHydrated: boolean;
+  setHasHydrated: (value: boolean) => void;
+
+  login: (
+    email: string,
+    password: string,
+  ) => Promise<{ ok: boolean; error?: string }>;
+
+  logout: () => Promise<void>;
+
+  hydrateUser: () => Promise<void>;
+
+  canRead: (moduleCode: string) => boolean;
+  canCreate: (moduleCode: string) => boolean;
+  canUpdate: (moduleCode: string) => boolean;
+  canDelete: (moduleCode: string) => boolean;
 }
 
 export const useAuth = create<AuthState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       user: null,
       isAuthenticated: false,
+      isLoading: false,
+
+      hasHydrated: false,
+
+      setHasHydrated: (value) =>
+        set({
+          hasHydrated: value,
+        }),
 
       login: async (email, password) => {
         try {
-          const data = await authService.login({ email, password } as LoginDto);
-          localStorage.setItem("accessToken", data.accessToken);
+          set({ isLoading: true });
+
+          const data = await authService.login({
+            email,
+            password,
+          });
 
           set({
             user: data.user,
             isAuthenticated: true,
+            isLoading: false,
           });
 
           return { ok: true };
-        } catch (error: unknown) {
-          const message =
-            error instanceof Error ? error.message : "Login failed";
-          return { ok: false, error: message };
+        } catch (error: any) {
+          set({ isLoading: false });
+
+          return {
+            ok: false,
+            error: error?.response?.data?.message ?? "Login failed",
+          };
         }
       },
 
-      logout: () => {
-        localStorage.removeItem("accessToken");
+      logout: async () => {
+        try {
+          set({ isLoading: true });
+
+          await authService.logout();
+        } catch (error) {
+          console.error(error);
+        }
+
         set({
           user: null,
           isAuthenticated: false,
+          isLoading: false,
         });
+      },
+
+      canRead: (moduleCode) => {
+        const permissions = get().user?.role?.modulePermissions ?? [];
+
+        return hasPermission(permissions, moduleCode, "canRead");
+      },
+
+      canCreate: (moduleCode) => {
+        const permissions = get().user?.role?.modulePermissions ?? [];
+
+        return hasPermission(permissions, moduleCode, "canCreate");
+      },
+
+      canUpdate: (moduleCode) => {
+        const permissions = get().user?.role?.modulePermissions ?? [];
+
+        return hasPermission(permissions, moduleCode, "canUpdate");
+      },
+
+      canDelete: (moduleCode) => {
+        const permissions = get().user?.role?.modulePermissions ?? [];
+
+        return hasPermission(permissions, moduleCode, "canDelete");
+      },
+
+      hydrateUser: async () => {
+        set({
+          isLoading: true,
+        });
+
+        try {
+          const user = await authService.me();
+
+          set({
+            user,
+            isAuthenticated: true,
+            isLoading: false,
+          });
+        } catch {
+          set({
+            user: null,
+            isAuthenticated: false,
+            isLoading: false,
+          });
+        }
       },
     }),
     {
       name: "vsource-auth",
-    }
-  )
+      onRehydrateStorage: () => (state) => {
+        state?.setHasHydrated(true);
+      },
+    },
+  ),
 );
 
 interface UiState {
@@ -97,6 +193,6 @@ export const useUi = create<UiState>()(
     }),
     {
       name: "vsource-ui",
-    }
-  )
+    },
+  ),
 );
