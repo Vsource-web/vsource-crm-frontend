@@ -31,6 +31,7 @@ import {
   updateUserSchema,
   UserFormValues,
 } from "../schemas/user.schema";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface Role {
   id: string;
@@ -72,7 +73,7 @@ export default function UserForm({
     defaultValues: {
       name: "",
       email: "",
-      branchId: "",
+      branchIds: [],
       roleId: "",
       ...defaultValues,
     },
@@ -83,7 +84,7 @@ export default function UserForm({
       form.reset({
         name: defaultValues.name ?? "",
         email: defaultValues.email ?? "",
-        branchId: defaultValues.branchId ?? "",
+        branchIds: defaultValues.branchIds ?? [],
         roleId: defaultValues.roleId ?? "",
       });
     }
@@ -152,30 +153,33 @@ export default function UserForm({
           />
         )}
 
-        {/* BRANCH */}
-
         <FormField
           control={form.control}
-          name="branchId"
+          name="branchIds"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Branch</FormLabel>
+              <FormLabel>Branches</FormLabel>
 
-              <Select value={field.value} onValueChange={field.onChange}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select branch" />
-                  </SelectTrigger>
-                </FormControl>
+              <div className="space-y-3 rounded-md border p-4">
+                {branches.map((branch) => (
+                  <div key={branch.id} className="flex items-center space-x-2">
+                    <Checkbox
+                      checked={field.value?.includes(branch.id)}
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          field.onChange([...(field.value ?? []), branch.id]);
+                        } else {
+                          field.onChange(
+                            field.value?.filter((id) => id !== branch.id) ?? [],
+                          );
+                        }
+                      }}
+                    />
 
-                <SelectContent>
-                  {branches.map((branch) => (
-                    <SelectItem key={branch.id} value={branch.id}>
-                      {branch.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                    <label className="text-sm">{branch.name}</label>
+                  </div>
+                ))}
+              </div>
 
               <FormMessage />
             </FormItem>

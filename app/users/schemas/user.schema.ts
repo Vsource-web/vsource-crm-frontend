@@ -4,14 +4,14 @@ export const createUserSchema = z.object({
   name: z.string().min(3),
   email: z.string().email(),
   password: z.string().min(8, "Minimum 8 characters"),
-  branchId: z.string().optional(),
+  branchIds: z.array(z.string()).optional(),
   roleId: z.string().min(1, "Role is required"),
 });
 
 export const updateUserSchema = z.object({
   name: z.string().min(3),
   email: z.string().email(),
-  branchId: z.string().optional(),
+  branchIds: z.array(z.string()).optional(),
   roleId: z.string().optional(),
 });
 
@@ -19,7 +19,7 @@ export type UserFormValues = {
   name: string;
   email: string;
   password?: string;
-  branchId?: string;
+  branchIds?: string[];
   roleId: string;
 };
 

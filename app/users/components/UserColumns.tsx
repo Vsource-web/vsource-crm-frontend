@@ -13,6 +13,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { User } from "../types/user";
+import { Badge } from "@/components/ui/badge";
 
 interface Props {
   onView: (user: User) => void;
@@ -48,15 +49,28 @@ export const getUserColumns = ({
   },
 
   {
-    id: "branch",
+    id: "branches",
 
-    header: "Branch",
+    header: "Branches",
 
     cell: ({ row }) => {
-      return row.original.branch?.name ?? "-";
+      const branches = row.original.branches ?? [];
+
+      if (!branches.length) {
+        return "-";
+      }
+
+      return (
+        <div className="flex flex-wrap gap-1">
+          {branches.map((branch, idx) => (
+            <Badge key={branch.id || idx} variant="secondary">
+              {branch.name}{" "}
+            </Badge>
+          ))}
+        </div>
+      );
     },
   },
-
   {
     accessorKey: "createdAt",
 

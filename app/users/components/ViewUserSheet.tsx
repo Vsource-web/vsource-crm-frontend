@@ -7,6 +7,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { User } from "../types/user";
+import { Badge } from "@/components/ui/badge";
 
 interface Props {
   open: boolean;
@@ -40,7 +41,13 @@ export default function ViewUserSheet({ open, onOpenChange, user }: Props) {
           <div>
             <p className="text-sm text-muted-foreground">Branch</p>
 
-            <p>{user.branch?.name ?? "-"}</p>
+            <p>
+              {user?.branches.map((branch, idx) => (
+                <Badge key={branch.id || idx} variant="secondary">
+                  {branch.name}
+                </Badge>
+              ))}
+            </p>
           </div>
 
           <div>

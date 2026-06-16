@@ -10,14 +10,14 @@ export interface Branch {
 
 export interface User {
   id: string;
+
   name: string;
   email: string;
 
-  branchId?: string | null;
-
   createdAt: string;
   updatedAt: string;
-  branch?: Branch | null;
+
+  branches: Branch[];
 
   role: Role;
 }
