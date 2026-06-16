@@ -73,6 +73,7 @@ export default function UserForm({
     defaultValues: {
       name: "",
       email: "",
+      password: "",
       branchIds: [],
       roleId: "",
       ...defaultValues,
@@ -84,6 +85,7 @@ export default function UserForm({
       form.reset({
         name: defaultValues.name ?? "",
         email: defaultValues.email ?? "",
+        password: "",
         branchIds: defaultValues.branchIds ?? [],
         roleId: defaultValues.roleId ?? "",
       });

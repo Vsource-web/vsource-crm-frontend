@@ -104,12 +104,12 @@ export const getUserColumns = ({
               Edit
             </DropdownMenuItem>
 
-            <DropdownMenuItem
+            {/* <DropdownMenuItem
               className="text-red-500"
               onClick={() => onDelete(user)}
             >
               Delete
-            </DropdownMenuItem>
+            </DropdownMenuItem> */}
           </DropdownMenuContent>
         </DropdownMenu>
       );

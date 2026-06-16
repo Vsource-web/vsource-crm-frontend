@@ -5,6 +5,7 @@ import { useState } from "react";
 import {
   Sheet,
   SheetContent,
+  SheetDescription,
   SheetHeader,
   SheetTitle,
   SheetTrigger,
@@ -19,11 +20,12 @@ import { useRoles } from "../hooks/useRoles";
 import { useBranches } from "../hooks/useBranches";
 import { useCreateUser } from "../hooks/useCreateUser";
 import { UserFormValues } from "../schemas/user.schema";
-import { queryClient } from "@/lib/query-client";
 import { userKeys } from "../service/query-keys";
+import { useQueryClient } from "@tanstack/react-query";
 
 export default function AddUserSheet() {
   const [open, setOpen] = useState(false);
+  const queryClient = useQueryClient();
 
   const { data: roles = [] } = useRoles();
 
@@ -60,6 +62,9 @@ export default function AddUserSheet() {
       >
         <SheetHeader>
           <SheetTitle>Create User</SheetTitle>
+          <SheetDescription>
+            Create a new user and assign branches and role.
+          </SheetDescription>
         </SheetHeader>
 
         <div className="mt-6">
