@@ -63,7 +63,18 @@ const items = [
   },
   // { to: "/course-finder", label: "Course Finder", icon: GraduationCap },
   // { to: "/students", label: "Students", icon: GraduationCap },
-  // { to: "/applications", label: "Applications", icon: FileText },
+  {
+    moduleCode: "STUDENT_PROFILES",
+    to: "/student-profiles",
+    label: "Student Profiles",
+    icon: GraduationCap,
+  },
+  {
+    moduleCode: "Applications",
+    to: "/applications",
+    label: "Applications",
+    icon: FileText,
+  },
   {
     moduleCode: "UNIVERSITIES",
     to: "/universities",

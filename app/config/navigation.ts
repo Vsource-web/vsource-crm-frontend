@@ -7,6 +7,7 @@ import {
   Settings2,
   MapPin,
   Building2,
+  GraduationCap,
 } from "lucide-react";
 
 export const navigationItems = [
@@ -15,6 +16,12 @@ export const navigationItems = [
     to: "/leads",
     label: "MASTER Leads",
     icon: Users,
+  },
+  {
+    moduleCode: "STUDENT_PROFILES",
+    to: "/student-profiles",
+    label: "Student Profiles",
+    icon: GraduationCap,
   },
   {
     moduleCode: "MBBS_LEADS",
