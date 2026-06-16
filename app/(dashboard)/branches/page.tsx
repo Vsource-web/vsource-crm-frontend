@@ -383,11 +383,10 @@ export default function BranchesPage() {
                     <Building2 className="h-5 w-5" />
                   </div>
 
-                  <Badge className="ml-auto">Active</Badge>
+                  <h3 className="text-lg font-bold">{branch.name}</h3>
                 </div>
 
                 <CardContent className="p-5">
-                  <h3 className="text-lg font-bold">{branch.name}</h3>
 
                   <div className="mt-5 grid grid-cols-3 gap-3">
                     <div className="rounded-xl bg-muted/50 p-3 text-center">
