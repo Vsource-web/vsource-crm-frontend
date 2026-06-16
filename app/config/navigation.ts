@@ -7,6 +7,7 @@ import {
   Settings2,
   MapPin,
   LayoutDashboard,
+  Building2,
 } from "lucide-react";
 
 export const navigationItems = [
@@ -27,6 +28,12 @@ export const navigationItems = [
     to: "/mbbs-leads",
     label: "MBBS Leads",
     icon: Users,
+  },
+  {
+    moduleCode: "UNIVERSITIES",
+    to: "/universities",
+    label: "Universities",
+    icon: Building2,
   },
   {
     moduleCode: "MASTER_SETTINGS",

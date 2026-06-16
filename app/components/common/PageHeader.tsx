@@ -1,3 +1,4 @@
+// crm-frontend-next\app\components\common\PageHeader.tsx
 import type { ReactNode } from "react";
 import { motion } from "framer-motion";
 

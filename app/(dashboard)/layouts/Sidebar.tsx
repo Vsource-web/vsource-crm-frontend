@@ -46,8 +46,8 @@ const items = [
     label: "MASTER Leads",
     icon: Users,
     children: [
-      { to: "/leads/add", label: "Add Lead" },
-      { to: "/leads/all", label: "All Leads" },
+      { to: "/leads/add", label: "Add Walk-In" },
+      { to: "/leads/all", label: "All Walk-In's" },
       // { to: "/leads/allocated", label: "Allocated" },
       // { to: "/leads/today-followup", label: "Today Follow-up" },
       // { to: "/leads/all-followup", label: "All Follow-ups" },
@@ -59,8 +59,8 @@ const items = [
     label: "MBBS Leads",
     icon: Users,
     children: [
-      { to: "/mbbs-leads/add", label: "Add Lead" },
-      { to: "/mbbs-leads/all", label: "All Leads" },
+      { to: "/mbbs-leads/add", label: "Add Walk-In" },
+      { to: "/mbbs-leads/all", label: "All Walk-In's" },
       // { to: "/mbbs-leads/allocated", label: "Allocated" },
       // { to: "/mbbs-leads/today-followup", label: "Today Follow-up" },
       // { to: "/mbbs-leads/all-followup", label: "All Follow-ups" },
@@ -69,7 +69,12 @@ const items = [
   // { to: "/course-finder", label: "Course Finder", icon: GraduationCap },
   // { to: "/students", label: "Students", icon: GraduationCap },
   // { to: "/applications", label: "Applications", icon: FileText },
-  // { to: "/universities", label: "Universities", icon: Building2 },
+  {
+    moduleCode: "UNIVERSITIES",
+    to: "/universities",
+    label: "Universities",
+    icon: Building2,
+  },
   // // { to: "/coaching", label: "Coaching", icon: BookOpen },
   // { to: "/loans", label: "Education Loans", icon: Banknote },
   // { to: "/reports", label: "Reports", icon: BarChart3 },
@@ -104,7 +109,12 @@ export function Sidebar() {
     // leads: false, // default open
   });
   const canRead = useAuth((s) => s.canRead);
-
+  console.log(
+    items.map((item) => ({
+      module: item.moduleCode,
+      canRead: canRead(item.moduleCode),
+    })),
+  );
   const filteredItems = items.filter((item) => canRead(item.moduleCode));
 
   const toggleMenu = (key: string) => {
