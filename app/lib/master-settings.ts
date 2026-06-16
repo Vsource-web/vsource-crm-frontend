@@ -19,19 +19,25 @@ export interface LeadSource {
 }
 
 export const getCountries = async () => {
-  const { data } = await axios.get<Country[]>(`${API_URL}/countries`);
+  const { data } = await axios.get<Country[]>(`${API_URL}/countries`, {
+    withCredentials: true,
+  });
 
   return data;
 };
 
 export const getIntakes = async () => {
-  const { data } = await axios.get<Intake[]>(`${API_URL}/intakes`);
+  const { data } = await axios.get<Intake[]>(`${API_URL}/intakes`, {
+    withCredentials: true,
+  });
 
   return data;
 };
 
 export const getLeadSources = async () => {
-  const { data } = await axios.get<LeadSource[]>(`${API_URL}/lead-sources`);
+  const { data } = await axios.get<LeadSource[]>(`${API_URL}/lead-sources`, {
+    withCredentials: true,
+  });
 
   return data;
 };
@@ -42,21 +48,29 @@ export interface MasterItem {
 }
 
 export const getMasters = async (endpoint: string) => {
-  const { data } = await axios.get<MasterItem[]>(`${API_URL}${endpoint}`);
-
-  return data;
-};
-
-export const createMaster = async (endpoint: string, name: string) => {
-  const { data } = await axios.post(`${API_URL}${endpoint}`, {
-    name,
+  const { data } = await axios.get<MasterItem[]>(`${API_URL}${endpoint}`, {
+    withCredentials: true,
   });
 
   return data;
 };
 
+export const createMaster = async (endpoint: string, name: string) => {
+  const { data } = await axios.post(
+    `${API_URL}${endpoint}`,
+    {
+      name,
+    },
+    { withCredentials: true },
+  );
+
+  return data;
+};
+
 export const deleteMaster = async (endpoint: string, id: string) => {
-  const { data } = await axios.delete(`${API_URL}${endpoint}/${id}`);
+  const { data } = await axios.delete(`${API_URL}${endpoint}/${id}`, {
+    withCredentials: true,
+  });
 
   return data;
 };

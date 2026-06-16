@@ -155,7 +155,7 @@ export function Topbar() {
             <DropdownMenuTrigger asChild>
               <button className="flex items-center gap-2 pl-1 pr-2 py-1 rounded-lg hover:bg-secondary transition-colors">
                 <Avatar className="size-8">
-                  <AvatarFallback className="bg-[image:var(--gradient-primary)] text-white text-xs font-semibold">
+                  <AvatarFallback className="bg-(image:--gradient-primary) text-white text-xs font-semibold">
                     {user?.name
                       ?.split(" ")
                       .map((p) => p[0])
@@ -166,7 +166,7 @@ export function Topbar() {
                 <div className="hidden md:flex flex-col items-start leading-tight">
                   <span className="text-xs font-semibold">{user?.name}</span>
                   <span className="text-[10px] text-muted-foreground capitalize">
-                    {user?.role}
+                    {user?.role?.name}
                   </span>
                 </div>
               </button>

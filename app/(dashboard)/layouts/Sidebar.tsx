@@ -27,7 +27,7 @@ import {
   PanelLeftInactive,
   PanelLeftIcon,
 } from "lucide-react";
-import { useUi } from "@/store";
+import { useAuth, useUi } from "@/store";
 import { cn } from "@/lib/utils";
 import logo from "@/assets/vsourcess.png";
 import { useState } from "react";
@@ -36,6 +36,7 @@ import Image from "next/image";
 const items = [
   // { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   {
+    moduleCode: "MASTER_LEADS",
     to: "/leads",
     label: "MASTER Leads",
     icon: Users,
@@ -48,6 +49,7 @@ const items = [
     ],
   },
   {
+    moduleCode: "MBBS_LEADS",
     to: "/mbbs-leads",
     label: "MBBS Leads",
     icon: Users,
@@ -67,23 +69,39 @@ const items = [
   // { to: "/loans", label: "Education Loans", icon: Banknote },
   // { to: "/reports", label: "Reports", icon: BarChart3 },
   // { to: "/promotional", label: "Promotional", icon: Megaphone },
-  { to: "/master-settings", label: "Master Settings", icon: Settings2 },
-  { to: "/branches", label: "Branches", icon: MapPin },
-  { to: "/roles", label: "Roles & Permissions", icon: ShieldCheck },
-  { to: "/users", label: "User Management", icon: UserCog },
+  {
+    moduleCode: "MASTER_SETTINGS",
+    to: "/master-settings",
+    label: "Master Settings",
+    icon: Settings2,
+  },
+  { moduleCode: "BRANCHES", to: "/branches", label: "Branches", icon: MapPin },
+  {
+    moduleCode: "ROLES",
+    to: "/roles",
+    label: "Roles & Permissions",
+    icon: ShieldCheck,
+  },
+  {
+    moduleCode: "USERS",
+    to: "/users",
+    label: "User Management",
+    icon: UserCog,
+  },
   // { to: "/profile", label: "Profile", icon: User },
 ] as const;
 
 export function Sidebar() {
   const { sidebarCollapsed, toggleSidebar } = useUi();
   const pathname = usePathname();
-
-  // const { sidebarCollapsed, toggleSidebar } = useUi();
-
   const [openMenus, setOpenMenus] = useState<Record<string, boolean>>({
     leads: pathname.startsWith("/leads"),
     // leads: false, // default open
   });
+  const canRead = useAuth((s) => s.canRead);
+
+  const filteredItems = items.filter((item) => canRead(item.moduleCode));
+
   const toggleMenu = (key: string) => {
     setOpenMenus((prev) => ({
       ...prev,
@@ -144,7 +162,7 @@ export function Sidebar() {
         </div>
 
         <nav className="flex-1 overflow-y-auto overflow-x-hidden px-2 py-3 space-y-0.5">
-          {items.map((it) => {
+          {filteredItems.map((it) => {
             const active =
               pathname === it.to || pathname.startsWith(it.to + "/");
             const Icon = it.icon;
