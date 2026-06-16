@@ -34,7 +34,12 @@ import { useState } from "react";
 import Image from "next/image";
 
 const items = [
-  // { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  {
+    moduleCode: "DASHBOARD",
+    to: "/dashboard",
+    label: "Dashboard",
+    icon: LayoutDashboard,
+  },
   {
     moduleCode: "MASTER_LEADS",
     to: "/leads",

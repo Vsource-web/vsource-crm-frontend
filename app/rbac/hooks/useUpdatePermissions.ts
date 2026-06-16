@@ -1,13 +1,12 @@
 "use client";
 
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-
-import { queryClient } from "@/lib/query-client";
 
 import { rbacApi } from "../api";
 
 export function useUpdatePermissions() {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({
       roleId,

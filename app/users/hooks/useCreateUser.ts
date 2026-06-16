@@ -1,10 +1,11 @@
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { toast } from "sonner";
 import { createUser } from "../service/user.service";
-import { queryClient } from "@/lib/query-client";
 
 export const useCreateUser = () => {
+  const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: createUser,
 

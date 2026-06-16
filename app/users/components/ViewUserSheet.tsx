@@ -41,13 +41,13 @@ export default function ViewUserSheet({ open, onOpenChange, user }: Props) {
           <div>
             <p className="text-sm text-muted-foreground">Branch</p>
 
-            <p>
+            <div>
               {user?.branches.map((branch, idx) => (
                 <Badge key={branch.id || idx} variant="secondary">
                   {branch.name}
                 </Badge>
               ))}
-            </p>
+            </div>
           </div>
 
           <div>
