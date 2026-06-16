@@ -1,6 +1,9 @@
+import { ModulePermission } from "@/rbac/types";
+
 export interface Role {
   id: string;
   name: string;
+  modulePermissions?: ModulePermission[];
 }
 
 export interface Branch {

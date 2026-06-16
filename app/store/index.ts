@@ -4,6 +4,7 @@ import { persist } from "zustand/middleware";
 import { authService } from "@/services/auth.service";
 import { Role } from "@/rbac/types";
 import { hasPermission } from "@/hooks/hasPermission";
+import { User } from "@/users/types/user";
 
 export type ModuleCode =
   | "MASTER_LEADS"
@@ -32,7 +33,7 @@ interface AuthState {
   login: (
     email: string,
     password: string,
-  ) => Promise<{ ok: boolean; error?: string }>;
+  ) => Promise<{ ok: boolean; error?: string; user: User | null }>;
 
   logout: () => Promise<void>;
 
@@ -73,13 +74,14 @@ export const useAuth = create<AuthState>()(
             isLoading: false,
           });
 
-          return { ok: true };
+          return { ok: true, user: data.user };
         } catch (error: any) {
           set({ isLoading: false });
 
           return {
             ok: false,
             error: error?.response?.data?.message ?? "Login failed",
+            user: null,
           };
         }
       },
